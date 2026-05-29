@@ -1,0 +1,1 @@
+if(!sessionStorage.getItem('ADIS_loaded')) document.documentElement.classList.add('first-load');

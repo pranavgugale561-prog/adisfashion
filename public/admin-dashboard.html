@@ -1,0 +1,2228 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel | ADIS Fashion</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#c6a55a">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+      :root {
+        --font-heading: 'Poppins', sans-serif;
+        --font-body: 'Poppins', sans-serif;
+        --gold: #FFE600;
+        --gold-hover: #D4BF00;
+        --gold-dim: rgba(255,230,0,0.15);
+        --bg: #050505;
+        --card: rgba(20, 20, 20, 0.6);
+        --card2: rgba(30, 30, 30, 0.6);
+        --border: rgba(255, 255, 255, 0.08);
+        --text: #e0ddd5;
+        --muted: #888;
+        --white: #ffffff;
+        --radius: 16px;
+        --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { 
+        font-family: var(--font-body); 
+        background-color: var(--bg); 
+        color: var(--text); 
+        min-height: 100vh; 
+        background-image: 
+          radial-gradient(circle at 15% 50%, rgba(255, 230, 0, 0.08), transparent 25%),
+          radial-gradient(circle at 85% 30%, rgba(255, 255, 255, 0.05), transparent 25%);
+        background-attachment: fixed;
+      }
+
+      .admin-layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+      @media (max-width: 768px) { .admin-layout { grid-template-columns: 1fr; } }
+
+      /* Sidebar */
+      .admin-sidebar {
+        background: var(--card); border-right: 1px solid var(--border);
+        padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      }
+      @media (max-width: 768px) {
+        .admin-sidebar { position: fixed; z-index: 100; width: 220px; height: 100vh; transform: translateX(-100%); transition: transform 0.3s ease; }
+        .admin-sidebar.open { transform: translateX(0); }
+      }
+      .admin-logo { display: flex; align-items: center; gap: 0.5rem; }
+      .admin-logo img { height: 40px; }
+      .admin-logo span { font-size: 0.55rem; letter-spacing: 0.15em; color: var(--muted); display: block; }
+      .admin-nav { display: flex; flex-direction: column; gap: 0.2rem; }
+      .admin-nav a { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0.8rem; border-radius: var(--radius); color: var(--muted); text-decoration: none; font-size: 0.8rem; transition: all var(--transition); }
+      .admin-nav a:hover, .admin-nav a.active { background: var(--gold-dim); color: var(--gold); }
+      .admin-nav a i { font-size: 1.1rem; }
+
+      /* Main */
+      .admin-main { padding: 1.5rem; overflow-y: auto; }
+      @media (min-width: 769px) { .admin-main { padding: 2rem 2.5rem; } }
+      .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 0.5rem; }
+      .admin-header h1 { font-family: var(--font-heading); font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; color: var(--white); }
+      .admin-user { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--muted); }
+      .admin-user i { font-size: 1.3rem; color: var(--gold); }
+      .mobile-menu-btn { display: none; background: none; border: none; color: var(--gold); font-size: 1.3rem; cursor: pointer; }
+      @media (max-width: 768px) { .mobile-menu-btn { display: block; } }
+
+      /* Stats */
+      .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; }
+      @media (min-width: 769px) { .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 1rem; } }
+      .stat-card { background: var(--card2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; display: flex; align-items: center; gap: 1rem; transition: all var(--transition); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 4px 24px rgba(0,0,0,0.2); }
+      .stat-card:hover { border-color: var(--gold); transform: translateY(-4px); box-shadow: 0 12px 32px rgba(255,230,0,0.1); }
+      .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+      .stat-icon.gold { background: var(--gold-dim); color: var(--gold); }
+      .stat-icon.green { background: rgba(5,150,105,0.15); color: #059669; }
+      .stat-icon.blue { background: rgba(37,99,235,0.15); color: #2563eb; }
+      .stat-icon.red { background: rgba(239,68,68,0.15); color: #ef4444; }
+      .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--white); line-height: 1; letter-spacing: -0.02em; }
+      .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+      /* Live indicator */
+      .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block; margin-right: 5px; box-shadow: 0 0 8px rgba(16,185,129,0.5); animation: pulse 2s infinite; }
+      @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+      
+      .filter-btn { background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 0.3rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: 600; transition: all 0.2s; }
+      .filter-btn.active { background: var(--gold); color: var(--bg); border-color: var(--gold); }
+      .filter-btn.danger { color: #ef4444; border-color: #ef4444; }
+      .filter-btn.danger.active { background: #ef4444; color: white; border-color: #ef4444; }
+      
+      .status-badge { font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+      .status-badge.blocked { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
+
+      /* Traffic Chart */
+      .traffic-chart { background: var(--card2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 2rem; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 4px 24px rgba(0,0,0,0.2); }
+      .traffic-chart h3 { font-size: 1rem; color: var(--white); font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+      .chart-bars { display: flex; align-items: flex-end; gap: 4px; height: 140px; }
+      .chart-bar { flex: 1; background: linear-gradient(to top, var(--gold), var(--gold-hover)); border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.5s ease; position: relative; }
+      .chart-bar:hover { opacity: 0.8; }
+      .chart-bar-label { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: 0.55rem; color: var(--muted); white-space: nowrap; }
+      .chart-bar-value { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 0.55rem; color: var(--gold); font-weight: 600; }
+
+      /* Tabs */
+      .tab-nav { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; overflow-x: auto; padding-bottom: 0.5rem; }
+      .tab-nav button { padding: 0.6rem 1.2rem; background: var(--card); border: 1px solid var(--border); border-radius: 100px; font-weight: 600; font-size: 0.75rem; color: var(--muted); cursor: pointer; transition: all var(--transition); white-space: nowrap; }
+      .tab-nav button.active { background: var(--gold); color: var(--bg); border-color: var(--gold); box-shadow: 0 4px 12px rgba(255,230,0,0.2); }
+      .tab-content { display: none; } .tab-content.active { display: block; }
+
+      /* Tables */
+      .admin-table { width: 100%; border-collapse: collapse; background: var(--card2); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 4px 24px rgba(0,0,0,0.2); }
+      .admin-table th { background: rgba(0,0,0,0.4); text-align: left; padding: 1rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 700; }
+      .admin-table td { padding: 1rem; border-bottom: 1px solid var(--border); font-size: 0.85rem; color: var(--white); }
+      .admin-table tr:hover td { background: rgba(255,230,0,0.05); }
+
+      /* Product Editor */
+      .product-editor-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+      @media (min-width: 769px) { .product-editor-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); } }
+      .product-edit-card { background: var(--card2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 4px 24px rgba(0,0,0,0.2); transition: all var(--transition); }
+      .product-edit-card:hover { border-color: var(--gold); box-shadow: 0 8px 32px rgba(255,230,0,0.1); }
+      .product-edit-card img { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; margin-bottom: 0.75rem; background: var(--bg); }
+      .product-edit-card label { display: block; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.2rem; margin-top: 0.5rem; }
+      .product-edit-card input, .product-edit-card textarea { width: 100%; padding: 0.5rem 0.6rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem; background: var(--card); color: var(--text); font-family: var(--font-body); transition: border-color var(--transition); }
+      .product-edit-card input:focus, .product-edit-card textarea:focus { outline: none; border-color: var(--gold); }
+      .product-edit-card textarea { resize: vertical; min-height: 50px; }
+
+      .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.7rem; border-radius: 100px; border: none; cursor: pointer; font-weight: 600; transition: all var(--transition); }
+      .btn-gold { background: var(--gold); color: var(--bg); } .btn-gold:hover { background: var(--gold-hover); }
+      .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); } .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+      .btn-group { display: flex; gap: 0.4rem; margin-top: 0.75rem; flex-wrap: wrap; }
+
+      /* Activity / Leads */
+      .activity-list { display: flex; flex-direction: column; gap: 0.75rem; }
+      .activity-item { background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; display: flex; align-items: center; gap: 1rem; font-size: 0.85rem; backdrop-filter: blur(10px); }
+      .activity-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+      .activity-dot.green { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.4); } 
+      .activity-dot.blue { background: #3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.4); } 
+      .activity-dot.orange { background: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,0.4); }
+      .activity-time { font-size: 0.7rem; color: var(--muted); margin-left: auto; white-space: nowrap; font-weight: 500; }
+
+      .lead-item { background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: center; backdrop-filter: blur(10px); transition: border-color var(--transition); }
+      .lead-item:hover { border-color: var(--gold); }
+      .lead-info { display: flex; flex-direction: column; gap: 4px; }
+      .lead-info strong { color: var(--white); font-size: 0.95rem; font-weight: 600; }
+      .lead-info span { color: var(--muted); font-size: 0.75rem; }
+
+      /* Login */
+      .admin-login-overlay { position: fixed; inset: 0; z-index: 10000; background: var(--bg); background-image: radial-gradient(circle at 50% 0%, rgba(255,230,0,0.05) 0%, transparent 60%); display: flex; align-items: center; justify-content: center; padding: 1rem; }
+      .admin-login-box { background: rgba(15,15,15,0.7); border: 1px solid rgba(255,230,0,0.2); border-radius: 24px; padding: 3rem 2.5rem; max-width: 400px; width: 100%; text-align: center; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02); }
+      .admin-login-box h2 { font-family: var(--font-heading); color: var(--gold); font-size: 1.8rem; letter-spacing: 0.15em; margin-bottom: 0.5rem; }
+      .admin-login-box p { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; }
+      .admin-login-box input { width: 100%; padding: 0.85rem 1.2rem; border: 1px solid var(--border); border-radius: 12px; background: rgba(0,0,0,0.5); color: var(--text); font-size: 0.9rem; margin-bottom: 1rem; font-family: var(--font-body); transition: all var(--transition); }
+      .admin-login-box input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,230,0,0.1); }
+      .admin-login-box input::placeholder { color: var(--muted); }
+      .admin-login-btn { width: 100%; padding: 0.75rem; background: var(--gold); color: var(--bg); border: none; border-radius: 100px; font-size: 0.85rem; font-weight: 700; cursor: pointer; letter-spacing: 0.05em; transition: background var(--transition); }
+      .admin-login-btn:hover { background: var(--gold-hover); }
+      .login-error { color: #ef4444; font-size: 0.75rem; margin-top: 0.3rem; display: none; }
+
+      .drag-handle:active { cursor: grabbing; }
+
+      /* Mobile Specific Overrides */
+      @media (max-width: 768px) {
+         .admin-header h1 { font-size: 1.2rem; }
+         .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+         .stat-card { padding: 0.75rem; flex-direction: column; text-align: center; }
+         .stat-icon { margin: 0 auto 0.5rem; }
+         .stat-value { font-size: 1.2rem; }
+         
+         .broadcast-grid { grid-template-columns: 1fr !important; }
+         .broadcast-grid button { width: 100%; margin-top: 0.5rem; }
+         
+         .tab-nav button { padding: 0.6rem 0.75rem; font-size: 0.7rem; }
+         
+         .activity-item { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+         .activity-time { margin-left: 0; margin-top: 0.2rem; }
+         .admin-main { padding: 1rem; padding-top: 4.5rem; }
+         .admin-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+         .admin-login-box { padding: 2rem 1.5rem; max-width: 90%; }
+      }
+      
+      .mobile-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 99; backdrop-filter: blur(5px); display: none; }
+      .mobile-overlay.open { display: block; }
+      
+      .mobile-header { display: none; }
+      @media (max-width: 768px) {
+         .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; background: rgba(20,20,20,0.8); border-bottom: 1px solid var(--border); position: fixed; top: 0; left: 0; right: 0; z-index: 98; backdrop-filter: blur(20px); }
+         .admin-header .mobile-menu-btn { display: none; } /* hide the old inline button */
+      }
+
+      /* Date Filter CSS */
+      .date-filter-btn {
+         background: #1a1a1a; color: #eee; border: 1px solid #333; 
+         padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; 
+         cursor: pointer; font-size: 0.85rem; transition: background 0.2s; position: relative;
+         min-width: 140px; justify-content: space-between;
+      }
+      .date-filter-btn:hover { background: #2a2a2a; }
+      
+      .date-dropdown {
+         position: absolute; top: calc(100% + 5px); right: 0; background: #222; border: 1px solid #333;
+         border-radius: 8px; width: 260px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+         display: none; padding: 0.5rem 0;
+      }
+      .date-dropdown.show { display: block; }
+      
+      .date-option {
+         display: flex; align-items: center; justify-content: space-between; padding: 0.7rem 1.2rem;
+         cursor: pointer; font-size: 0.85rem; color: #ccc; transition: background 0.2s;
+      }
+      .date-option:hover { background: rgba(255,255,255,0.05); }
+      
+      .date-option .radio-circle {
+         width: 16px; height: 16px; border-radius: 50%; border: 2px solid #555; display: inline-block;
+         position: relative;
+      }
+      .date-option.active { color: #fff; }
+      .date-option.active .radio-circle { border-color: #3b82f6; }
+      .date-option.active .radio-circle::after {
+         content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+         width: 8px; height: 8px; background: #3b82f6; border-radius: 50%;
+      }
+      .date-option .arrow { color: #888; display:flex; align-items:center; }
+
+    </style>
+    <script>if(!sessionStorage.getItem('ADIS_loaded')) document.documentElement.classList.add('first-load');</script>
+  </head>
+  <body>
+    <div class="admin-login-overlay" id="loginOverlay">
+      <div class="admin-login-box">
+        <div style="font-family: var(--font-heading); font-size: 2rem; font-weight: 900; color: white;"><span style="color: #FFE600;">A</span>DIS</div>
+        <h2>ADMIN</h2>
+        <p>ADIS Fashion Dashboard</p>
+        <form id="loginForm" onsubmit="return false;">
+          <input type="text" id="loginUser" placeholder="Username" autocomplete="username">
+          <input type="password" id="loginPass" placeholder="Password" autocomplete="current-password">
+          <button type="button" class="admin-login-btn" onclick="handleLogin()">SIGN IN</button>
+          <p class="login-error" id="loginError">Incorrect credentials</p>
+        </form>
+      </div>
+    </div>
+
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <div class="admin-layout" id="adminPanel" style="display:none;">
+      <div class="mobile-header">
+         <button class="mobile-menu-btn" id="mobileMenuBtnTop"><i class="ph ph-list"></i></button>
+         <div style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 900; color: white;"><span style="color: #FFE600;">A</span>DIS</div>
+      </div>
+      <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-logo">
+          <div style="font-family: var(--font-heading); font-size: 2rem; font-weight: 900; color: white;"><span style="color: #FFE600;">A</span>DIS</div>
+          <div><span>ADMIN PANEL</span></div>
+        </div>
+        <nav class="admin-nav">
+          <a href="#" class="active" data-tab="dashboard"><i class="ph ph-squares-four"></i> Dashboard</a>
+          <a href="#" data-tab="activity"><i class="ph ph-chart-line-up"></i> Activity</a>
+          <a href="#" data-tab="leads"><i class="ph ph-envelope-simple"></i> Leads</a>
+          <a href="#" data-tab="products"><i class="ph ph-tag"></i> Products</a>
+          <a href="#" data-tab="landing"><i class="ph ph-image"></i> Landing Images</a>
+          <a href="#" data-tab="history"><i class="ph ph-clock-counter-clockwise"></i> Product History</a>
+          <a href="#" data-tab="insights"><i class="ph ph-chart-pie"></i> Traffic Insights</a>
+          <a href="#" data-tab="engagement" style="border-left: 3px solid #3b82f6;"><i class="ph ph-chat-centered-text" style="color:#3b82f6;"></i> Engagement Center</a>
+          <a href="#" data-tab="vendors"><i class="ph ph-handshake"></i> Vendors / B2B</a>
+          <a href="#" data-tab="database"><i class="ph ph-database"></i> Database Setup</a>
+          <a href="#" data-tab="users-orders"><i class="ph ph-users-three"></i> Users & Orders</a>
+          <a href="/" target="_blank"><i class="ph ph-globe"></i> View Site</a>
+        </nav>
+        <div style="margin-top:auto;">
+          <a href="#" id="logoutBtn" style="color:var(--muted);font-size:0.8rem;text-decoration:none;display:flex;align-items:center;gap:0.4rem;">
+            <i class="ph ph-sign-out"></i> Logout
+          </a>
+        </div>
+      </aside>
+
+      <main class="admin-main">
+        <div class="admin-header">
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="ph ph-list"></i></button>
+            <h1>Dashboard</h1>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;position:relative;">
+            <button class="date-filter-btn" id="dateFilterBtn" onclick="toggleDateDropdown()">
+               <span><i class="ph ph-calendar-blank" style="margin-right:0.3rem;"></i> <span id="currentDateLabel">Today</span></span> <i class="ph ph-caret-down"></i>
+            </button>
+            <div class="date-dropdown" id="dateDropdown">
+               <!-- Injected via JS -->
+            </div>
+            <div class="admin-user"><i class="ph ph-user-circle"></i> Admin</div>
+          </div>
+        </div>
+
+        <div class="stats-grid" id="statsGrid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+          <div class="stat-card"><div class="stat-icon gold"><i class="ph ph-eye"></i></div><div><div class="stat-value" id="statViews">0</div><div class="stat-label" id="labelViews">Views Today</div></div></div>
+          <div class="stat-card"><div class="stat-icon green"><i class="ph ph-trend-up"></i></div><div><div class="stat-value" id="statLifetime">0</div><div class="stat-label" id="labelLifetime">Lifetime Traffic</div></div></div>
+          <div class="stat-card"><div class="stat-icon blue"><i class="ph ph-shopping-cart"></i></div><div><div class="stat-value" id="statCartAdds">0</div><div class="stat-label" id="labelCart">Total Cart Adds</div></div></div>
+          <div class="stat-card" id="cardSessions" style="cursor:pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)';this.style.borderColor='var(--gold)'" onmouseout="this.style.transform='translateY(0)';this.style.borderColor='var(--border)'">
+             <div class="stat-icon red"><i class="ph ph-users"></i></div>
+             <div>
+                <div class="stat-value" id="statSessions">0</div>
+                <div class="stat-label"><span class="live-dot"></span>Active Sessions</div>
+                <div style="font-size:0.6rem; color:var(--muted); margin-top:0.2rem;">Click to view live users</div>
+             </div>
+          </div>
+          <div class="stat-card"><div class="stat-icon gold"><i class="ph ph-star"></i></div><div><div class="stat-value" id="statTopProduct" style="font-size:1.2rem;">-</div><div class="stat-label">Most Viewed Product</div></div></div>
+          <div class="stat-card"><div class="stat-icon green"><i class="ph ph-crown"></i></div><div><div class="stat-value" id="statTopCustomer" style="font-size:1.2rem;">-</div><div class="stat-label">Top Customer (Leads)</div></div></div>
+        </div>
+
+        <div class="traffic-chart" id="trafficChart">
+          <h3><span class="live-dot"></span> Real-Time Traffic (Last 7 Days)</h3>
+          <div class="chart-bars" id="chartBars"></div>
+        </div>
+
+        <div class="tab-nav">
+          <button class="active" data-tab="dashboard">Overview</button>
+          <button data-tab="activity">Activity</button>
+          <button data-tab="leads">Leads</button>
+          <button data-tab="products">Products</button>
+          <button data-tab="history">History</button>
+          <button data-tab="landing">Landing</button>
+          <button data-tab="sessions">Sessions</button>
+          <button data-tab="insights">Traffic Insights</button>
+          <button data-tab="engagement">Engagement Center</button>
+          <button data-tab="vendors">Vendors</button>
+          <button data-tab="database">Database Setup</button>
+          <button data-tab="users-orders">Users & Orders</button>
+        </div>
+
+        <div class="tab-content active" id="tab-dashboard">
+          <h3 style="margin-bottom:0.75rem;color:var(--gold);font-size:0.9rem;">Recent Activity</h3>
+          <div class="activity-list" id="recentActivity"></div>
+        </div>
+
+
+
+        <div class="tab-content" id="tab-activity">
+          <h3 style="margin-bottom:0.75rem;color:var(--gold);font-size:0.9rem;">Click Activity Log</h3>
+          <div style="overflow-x:auto;">
+            <table class="admin-table" id="activityTable"><thead><tr><th>Action Taken</th><th>Page Route</th><th>Device & Screen</th><th>Date & Time</th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-leads">
+          <h3 style="margin-bottom:0.75rem;color:var(--gold);font-size:0.9rem;">Captured Leads</h3>
+          <div id="leadsContainer"></div>
+        </div>
+
+        <div class="tab-content" id="tab-vendors">
+          <h3 style="margin-bottom:0.75rem;color:var(--gold);font-size:0.9rem;">Vendor & B2B Inquiries</h3>
+          <div id="vendorsContainer"></div>
+        </div>
+
+        <div class="tab-content" id="tab-products">
+          <!-- EXISTING Tab Product content... -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h3 style="color:var(--gold);font-size:0.9rem;">Storefront Products</h3>
+            <div style="display:flex; gap:0.5rem;">
+               <button id="btnResetViews" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.8rem; border-color:#ef4444; color:#ef4444;">Reset All Views</button>
+               <button id="addAdminProductBtn" class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.8rem;"><i class="ph ph-plus"></i> Add Product</button>
+            </div>
+          </div>
+          <p style="color:var(--muted); font-size:0.8rem; margin-bottom:1.5rem;">Changes made here instantly synchronize to all users across the world via Firebase.</p>
+          <div id="categoryManager"></div>
+          <div id="adminProductsGrid" style="display:grid; gap:1rem; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));">
+             <!-- Products injected here -->
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-history">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h3 style="color:var(--gold);font-size:0.9rem;">Product Added History</h3>
+            <button id="btnClearHistory" class="btn btn-sm btn-outline" style="border-color:#ef4444; color:#ef4444;">Clear History</button>
+          </div>
+          <p style="color:var(--muted); font-size:0.8rem; margin-bottom:1.5rem;">A record of all products added to the site. Click 'Republish' to restore any deleted items to the storefront.</p>
+          <div id="adminHistoryGrid" style="display:grid; gap:1rem; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));">
+             <!-- History injected here -->
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-insights">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h3 style="color:var(--gold);font-size:0.9rem;">Advanced Traffic Insights</h3>
+          </div>
+          <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+             <div class="stat-card" style="flex-direction:column; align-items:flex-start; gap:0.5rem;">
+                <div class="stat-label">Top Referrers</div>
+                <div id="insightsReferrers" style="width:100%; font-size:0.8rem; color:var(--text);"></div>
+             </div>
+             <div class="stat-card" style="flex-direction:column; align-items:flex-start; gap:0.5rem;">
+                <div class="stat-label">Device Breakdown</div>
+                <div id="insightsDevices" style="width:100%; font-size:0.8rem; color:var(--text);"></div>
+             </div>
+             <div class="stat-card" style="flex-direction:column; align-items:flex-start; gap:0.5rem;">
+                <div class="stat-label">Popular Content</div>
+                <div id="insightsPages" style="width:100%; font-size:0.8rem; color:var(--text);"></div>
+             </div>
+          </div>
+          <div style="margin-top:1.5rem; background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:1.5rem;">
+             <h4 style="color:var(--gold); font-size:0.85rem; margin-bottom:1rem;"><i class="ph-fill ph-megaphone"></i> Broadcast Notification Blast</h4>
+             <p style="font-size:0.75rem; color:var(--muted); margin-bottom:1rem;">Send a real-time message to all active users to drive traffic or give updates.</p>
+             <div class="broadcast-grid" style="display:grid; grid-template-columns: 1fr 2fr auto; gap:0.75rem; align-items:end;">
+                <div>
+                   <label style="display:block; font-size:0.65rem; color:var(--muted); margin-bottom:0.3rem;">TITLE</label>
+                   <input type="text" id="blastTitle" placeholder="e.g. New Collection Live!" style="width:100%; background:var(--card); color:white; border:1px solid var(--border); padding:0.6rem; border-radius:6px; font-size:0.8rem;">
+                </div>
+                <div>
+                   <label style="display:block; font-size:0.65rem; color:var(--muted); margin-bottom:0.3rem;">MESSAGE BODY</label>
+                   <input type="text" id="blastBody" placeholder="e.g. Check out our new Ruby collection now." style="width:100%; background:var(--card); color:white; border:1px solid var(--border); padding:0.6rem; border-radius:6px; font-size:0.8rem;">
+                </div>
+                <button id="btnSendBlast" class="btn btn-primary" style="padding:0.6rem 1.5rem; font-weight:700;">SEND BLAST</button>
+             </div>
+          </div>
+
+          <div style="margin-top:1.5rem; background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:1.5rem;">
+             <h4 style="color:var(--gold); font-size:0.85rem; margin-bottom:1rem;">Conversion Funnel (Last 30 Days)</h4>
+             <div id="conversionFunnel" style="display:flex; flex-direction:column; gap:0.75rem;"></div>
+          </div>
+           <div style="margin-top:1.5rem; background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:1.5rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                 <h4 style="color:var(--gold); font-size:0.85rem;"><span class="live-dot"></span> Live Visitors Right Now</h4>
+                 <div id="liveVisitorsCount" style="font-size:0.75rem; color:var(--muted); font-weight:700;">0 ONLINE</div>
+              </div>
+              <div id="liveVisitorsList" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:0.8rem;"></div>
+           </div>
+        </div>
+
+        <div class="tab-content" id="tab-engagement">
+           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+              <h3 style="color:#3b82f6; font-size:1.1rem; letter-spacing:0.05em;"><i class="ph ph-chat-centered-text"></i> Engagement Center</h3>
+               <div style="display:flex; align-items:center; gap:0.5rem;">
+                  <button onclick="location.reload()" class="btn btn-outline" style="padding:0.4rem 0.8rem; font-size:0.75rem; color:#3b82f6; border-color:#3b82f6;"><i class="ph ph-arrows-clockwise"></i> REFRESH</button>
+                  <div style="font-size:0.75rem; color:var(--muted); background:rgba(59,130,246,0.1); padding:0.4rem 0.8rem; border-radius:100px; border:1px solid #3b82f6;">INDIVIDUAL USER TARGETING</div>
+               </div>
+           </div>
+           
+           <div style="background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:1.5rem;">
+               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:1px solid var(--border); padding-bottom:1rem; flex-wrap:wrap; gap:1rem;">
+                  <div>
+                     <h4 style="color:var(--white); font-size:0.9rem; margin-bottom:0.2rem;">User Interaction History</h4>
+                     <p style="font-size:0.75rem; color:var(--muted);">Select a user to send a personalized notification message directly to their device.</p>
+                  </div>
+                  
+                  <div id="diagNotification" style="background:var(--card); border:1px solid var(--border); padding:0.5rem 0.8rem; border-radius:8px; display:flex; gap:1rem; font-size:0.65rem;">
+                     <div style="display:flex; flex-direction:column; gap:2px;">
+                        <span style="color:var(--muted);">PERMISSION</span>
+                        <strong id="diagNotifPerm">-</strong>
+                     </div>
+                     <div style="display:flex; flex-direction:column; gap:2px;">
+                        <span style="color:var(--muted);">SERVICE WORKER</span>
+                        <strong id="diagNotifSW">-</strong>
+                     </div>
+                     <div style="display:flex; gap:0.4rem; align-items:center;">
+                        <button onclick="requestNotifPerm()" id="btnRequestNotif" style="background:var(--gold); color:var(--bg); border:none; padding:0.2rem 0.5rem; border-radius:4px; font-weight:700; display:none;">ENABLE</button>
+                        <button onclick="testLocalNotification()" style="background:rgba(59,130,246,0.1); border:1px solid #3b82f6; color:#3b82f6; padding:0.2rem 0.5rem; border-radius:4px; font-weight:700;">TEST MY PHONE</button>
+                     </div>
+                  </div>
+                  
+                  <div id="iosPWAGuide" style="display:none; background:rgba(59,130,246,0.1); border:1px solid #3b82f6; padding:0.8rem; border-radius:12px; margin-top:0.5rem; width:100%;">
+                     <h5 style="color:#3b82f6; font-size:0.8rem; margin-bottom:0.4rem;"><i class="ph ph-apple-logo"></i> iOS REQUIREMENT</h5>
+                     <p style="font-size:0.7rem; color:var(--text); line-height:1.4;">Apple requires you to <strong>Add this site to Home Screen</strong> first. 1. Tap <i class="ph ph-share-network"></i> Share. 2. Tap <strong>'Add to Home Screen'</strong>. 3. Open the "Admin" app from your Home screen to see notifications.</p>
+                  </div>
+
+                  <div style="display:flex; gap:0.6rem; font-size:0.7rem; align-items:center;">
+                     <button onclick="filterEngagement('all')" id="filterAll" class="filter-btn active">ALL</button>
+                     <button onclick="filterEngagement('unsubscribed')" id="filterUnsub" class="filter-btn danger">UNSUBSCRIBED</button>
+                     <span style="height:15px; width:1px; background:var(--border); margin:0 0.2rem;"></span>
+                     <span style="display:flex; align-items:center; gap:0.3rem;"><span class="live-dot" style="margin:0;"></span> LIVE</span>
+                     <span style="display:flex; align-items:center; gap:0.3rem;"><span style="width:8px; height:8px; border-radius:50%; background:var(--muted); opacity:0.6;"></span> RECENT</span>
+                  </div>
+               </div>
+              
+              <div style="overflow-x:auto;">
+                 <table class="admin-table" id="engagementTable">
+                    <thead>
+                       <tr>
+                          <th>Status</th>
+                          <th>User / Lead Identity</th>
+                          <th>Last Seen Activity</th>
+                          <th>Platform</th>
+                          <th style="text-align:right;">Actions</th>
+                       </tr>
+                    </thead>
+                    <tbody id="engagementList">
+                       <!-- List injected here -->
+                    </tbody>
+                 </table>
+              </div>
+           </div>
+        </div>
+
+        <div class="tab-content" id="tab-landing">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h3 style="color:var(--gold);font-size:0.9rem;">Landing Images</h3>
+          </div>
+          <p style="color:var(--muted); font-size:0.8rem; margin-bottom:1.5rem;">Upload new .jpg images for the site hero and collections. Instantly updates via Firebase.</p>
+          <div id="adminLandingGrid" style="display:grid; gap:1.5rem;">
+             <!-- Landing forms injected here -->
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-database">
+          <section id="settings" class="tab-pane">
+        <div class="panel-section">
+          <h3><i class="ph ph-database"></i> Tracking Database Status</h3>
+          <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1rem;line-height:1.5;">
+            Your Firebase Realtime Database is <strong style="color: #10b981;">connected and active</strong>.<br>
+            All visitor traffic, carts, and leads are actively syncing across all devices.
+          </p>
+        </div>
+      </section>
+        </div>
+        <div class="tab-content" id="tab-users-orders">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h3 style="color:var(--gold);font-size:1.1rem;"><i class="ph ph-users-three"></i> Registered Users</h3>
+          </div>
+          <div class="admin-table-wrapper" style="margin-bottom:2rem;">
+            <table class="admin-table">
+              <thead><tr><th>Name</th><th>Phone</th><th>Gender</th><th>DOB</th><th>Joined</th></tr></thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h3 style="color:var(--gold);font-size:1.1rem;"><i class="ph ph-shopping-cart"></i> Recent Orders</h3>
+          </div>
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead><tr><th>Order ID</th><th>Phone</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th></tr></thead>
+              <tbody id="ordersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const ADMIN_USER = 'admin', ADMIN_PASS = 'adis2026';
+
+      function handleLogin() {
+        const user = document.getElementById('loginUser').value.trim();
+        const pass = document.getElementById('loginPass').value;
+        if (user === ADMIN_USER && pass === ADMIN_PASS) {
+          sessionStorage.setItem('ADIS_admin_auth', '1');
+          showAdmin();
+        } else {
+          document.getElementById('loginError').style.display = 'block';
+        }
+      }
+
+      // Also allow pressing Enter in the password field
+      document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('loginPass')?.addEventListener('keydown', e => {
+          if (e.key === 'Enter') handleLogin();
+        });
+        document.getElementById('loginUser')?.addEventListener('keydown', e => {
+          if (e.key === 'Enter') handleLogin();
+        });
+      });
+
+      // INIT MOVED TO BOTTOM
+
+      document.getElementById('logoutBtn')?.addEventListener('click', e => { e.preventDefault(); sessionStorage.removeItem('ADIS_admin_auth'); location.reload(); });
+
+      // Mobile sidebar
+      const toggleSidebar = () => { 
+        document.getElementById('adminSidebar').classList.toggle('open'); 
+        document.getElementById('mobileOverlay').classList.toggle('open'); 
+      };
+      document.getElementById('mobileMenuBtn')?.addEventListener('click', toggleSidebar);
+      document.getElementById('mobileMenuBtnTop')?.addEventListener('click', toggleSidebar);
+      document.getElementById('mobileOverlay')?.addEventListener('click', toggleSidebar);
+      
+      document.addEventListener('click', e => {
+        const sidebar = document.getElementById('adminSidebar');
+        const btn1 = document.getElementById('mobileMenuBtn');
+        const btn2 = document.getElementById('mobileMenuBtnTop');
+        if (sidebar && sidebar.classList.contains('open') && !sidebar.contains(e.target) && (!btn1 || !btn1.contains(e.target)) && (!btn2 || !btn2.contains(e.target)) && e.target.id !== 'mobileOverlay') {
+          sidebar.classList.remove('open');
+          document.getElementById('mobileOverlay')?.classList.remove('open');
+        }
+      });
+
+      // Firebase Integration for Admin
+      const firebaseConfig = {
+        apiKey: "AIzaSyA358G8v6GSaqdUemaME3-CKdqekxp9kcg",
+        authDomain: "ADIScreations.firebaseapp.com",
+        databaseURL: "https://ADIScreations-default-rtdb.firebaseio.com",
+        projectId: "ADIScreations",
+        storageBucket: "ADIScreations.firebasestorage.app",
+        messagingSenderId: "593523996212",
+        appId: "1:593523996212:web:07ab25c74fa1cc0b2ebc61"
+      };
+
+      function compressImageToBase64(file, maxDimension = 800) {
+        return new Promise((resolve, reject) => {
+           const reader = new FileReader();
+           reader.onload = (e) => {
+              const img = new Image();
+              img.onload = () => {
+                 let width = img.width;
+                 let height = img.height;
+                 if (width > height) {
+                    if (width > maxDimension) { height *= maxDimension / width; width = maxDimension; }
+                 } else {
+                    if (height > maxDimension) { width *= maxDimension / height; height = maxDimension; }
+                 }
+                 const canvas = document.createElement('canvas');
+                 canvas.width = width;
+                 canvas.height = height;
+                 const ctx = canvas.getContext('2d');
+                 ctx.drawImage(img, 0, 0, width, height);
+                 resolve(canvas.toDataURL('image/jpeg', 0.6));
+              };
+              img.onerror = () => reject('Image load failed');
+              img.src = e.target.result;
+           };
+           reader.onerror = () => reject('File read failed');
+           reader.readAsDataURL(file);
+        });
+      }
+
+      let firebaseDB = null;
+
+      async function initAdminFirebase() {
+        try {
+          const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js');
+          const { getDatabase, ref, onValue } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
+          
+          const app = initializeApp(firebaseConfig);
+          firebaseDB = { 
+             db: getDatabase(app), 
+             ref, 
+             onValue
+          };
+          console.log('Admin Firebase connected');
+          return true;
+        } catch (e) {
+          console.error('Admin Firebase init failed', e);
+          return false;
+        }
+      }
+
+      let adminData = {
+        analytics: { pageViews: {}, clicks: [], cartAdds: [], sessions: [] },
+        leads: [],
+        vendors: [],
+        products: [],
+        history: [], // Added for history tracking
+        categories: ['Men', 'Daily Wear', 'Sneakers'], // Default categories — matches frontend
+        landingConfig: null,
+        landingLayout: null
+      };
+
+      function asArray(data) {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        return Object.values(data);
+      }
+
+      async function showAdmin() {
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'grid';
+
+        // Local storage fallback (always load first to show data immediately)
+        const loadLocal = () => {
+          adminData.analytics = JSON.parse(localStorage.getItem('ADIS_analytics') || '{"pageViews":{},"clicks":[],"cartAdds":[],"sessions":[]}');
+          adminData.leads = JSON.parse(localStorage.getItem('ADIS_leads') || '[]');
+          adminData.vendors = JSON.parse(localStorage.getItem('ADIS_vendors') || '[]');
+          
+          // Add fallback for products, categories, and landing
+          adminData.products = JSON.parse(localStorage.getItem('ADIS_products') || '[]');
+          adminData.categories = JSON.parse(localStorage.getItem('ADIS_categories') || '["Bows", "Clips", "Headbands"]');
+          adminData.landingConfig = JSON.parse(localStorage.getItem('ADIS_landingConfig') || 'null');
+          adminData.history = JSON.parse(localStorage.getItem('ADIS_history') || '[]');
+          adminData.living_visitors = {};
+
+          renderDashboardData();
+          renderCategoryManager();
+          renderAdminProducts();
+          renderAdminLanding();
+          renderAdminHistory();
+          renderEngagementCenter();
+        };
+        
+        loadLocal();
+        // Keep polling local storage in case storefront updates it while Firebase is down
+        const localPoll = setInterval(loadLocal, 10000);
+        
+        const isFirebase = await initAdminFirebase();
+        if (isFirebase) {
+          // Stop polling if Firebase connects, as onValue will handle updates
+          clearInterval(localPoll);
+
+          // 1. Listen to Products
+          firebaseDB.onValue(firebaseDB.ref(firebaseDB.db, 'products'), (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                adminData.products = asArray(data);
+                renderDashboardData();
+                renderAdminProducts();
+            }
+          });
+          
+          // Added: Listen to Product History
+          firebaseDB.onValue(firebaseDB.ref(firebaseDB.db, 'product_history'), (snapshot) => {
+             const data = snapshot.val();
+             if (data) {
+                 adminData.history = asArray(data);
+                 renderAdminHistory();
+             }
+          });
+
+          // 2. Listen to Leads
+          firebaseDB.onValue(firebaseDB.ref(firebaseDB.db, 'leads'), (snapshot) => {
+             const data = snapshot.val();
+             if (data) {
+                 adminData.leads = asArray(data);
+                 renderDashboardData();
+             }
+          });
+
+          // 3. Listen to Vendors
+          firebaseDB.onValue(firebaseDB.ref(firebaseDB.db, 'vendors'), (snapshot) => {
+             const data = snapshot.val();
+             if (data) {
+                 adminData.vendors = asArray(data);
+                 renderDashboardData();
+             }
+          });
+
+          // 4. Listen to Living Visitors (Online Now)
+          firebaseDB.onValue(firebaseDB.ref(firebaseDB.db, 'living_visitors'), (snapshot) => {
+             adminData.living_visitors = snapshot.val() || {};
+             renderDashboardData();
+          });
+
+          // 5. Listen to Analytics Logs
+          const paths = ['pageViews', 'clicks', 'cartAdds', 'sessions'];
+          paths.forEach(path => {
+             firebaseDB.onValue(firebaseDB.ref(firebaseDB.db, path), (snapshot) => {
+                const val = snapshot.val();
+                if (!val) return;
+                
+                if (path === 'pageViews') {
+                   // Transform new log format into readable pageViews structure
+                   const builtPageViews = {};
+                   Object.values(val).forEach(v => {
+                      if (v && v.date && v.page) { 
+                         if (!builtPageViews[v.date]) builtPageViews[v.date] = {};
+                         builtPageViews[v.date][v.page] = (builtPageViews[v.date][v.page] || 0) + hitsOrOne(v);
+                      }
+                   });
+                   // Retro-compatibility: if empty, maybe it's the old flat structure
+                   if (Object.keys(builtPageViews).length === 0) {
+                      Object.keys(val).forEach(k => { if (String(k).match(/^\d{4}-\d{2}-\d{2}$/)) builtPageViews[k] = val[k]; });
+                   }
+                   adminData.analytics.pageViews = builtPageViews;
+                } else {
+                   adminData.analytics[path] = asArray(val);
+                }
+                renderDashboardData();
+             });
+          });
+
+          // Helper for summing hits
+          function hitsOrOne(v) { return typeof v === 'number' ? v : 1; }
+
+          // 6. Configs
+          firebaseDB.onValue(firebaseDB.ref(firebaseDB.db, 'categories'), (snapshot) => {
+             const data = snapshot.val();
+             if (data) {
+                 adminData.categories = data;
+                 renderCategoryManager();
+                 renderAdminProducts();
+             }
+          });
+          firebaseDB.onValue(firebaseDB.ref(firebaseDB.db, 'landingConfig'), (snapshot) => {
+             const data = snapshot.val();
+             if (data) {
+                 adminData.landingConfig = data;
+                 renderAdminLanding();
+             }
+          });
+          firebaseDB.onValue(firebaseDB.ref(firebaseDB.db, 'landingLayout'), (snapshot) => {
+             const data = snapshot.val();
+             if (data) {
+                 adminData.landingLayout = data;
+                 renderAdminLanding();
+             }
+          });
+        }
+      }
+
+      function syncProductsToFirebase() {
+         localStorage.setItem('ADIS_products', JSON.stringify(adminData.products));
+         if(!firebaseDB) return alert('Saved locally. Connect to Firebase to sync live.');
+         import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js').then(({ set, ref }) => {
+             set(ref(firebaseDB.db, 'products'), adminData.products)
+             .then(() => alert('Products synced successfully!'))
+             .catch(e => { console.error(e); alert('Error syncing products to database.'); });
+         });
+      }
+
+      function syncLandingToFirebase() {
+         localStorage.setItem('ADIS_landingConfig', JSON.stringify(adminData.landingConfig));
+         if(!firebaseDB) return alert('Saved locally. Connect to Firebase to sync live.');
+         import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js').then(({ set, ref }) => {
+             set(ref(firebaseDB.db, 'landingConfig'), adminData.landingConfig);
+             set(ref(firebaseDB.db, 'landingLayout'), adminData.landingLayout)
+             .then(() => alert('Landing Images synced successfully!'))
+             .catch(e => { console.error(e); alert('Error syncing landing images.'); });
+         });
+      }
+
+      function syncCategoriesToFirebase() {
+         localStorage.setItem('ADIS_categories', JSON.stringify(adminData.categories));
+         if(!firebaseDB) return;
+         import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js').then(({ set, ref }) => {
+             set(ref(firebaseDB.db, 'categories'), adminData.categories);
+         });
+      }
+
+       async function logProductToHistory(product) {
+          if(!firebaseDB) return;
+          try {
+             const { set, ref } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
+             const historyItem = {
+                ...product,
+                lastModified: new Date().toISOString()
+             };
+             // Use string key prefix "id_" to avoid Firebase sparse array null issue with numeric keys
+             await set(ref(firebaseDB.db, `product_history/id_${product.id}`), historyItem);
+          } catch(e) { console.error('History log failed', e); }
+       }
+
+      function renderCategoryManager() {
+        const container = document.getElementById('categoryManager');
+        if (!container) return;
+
+        let html = `
+          <div style="background:var(--card2); padding:1rem; border-radius:8px; border:1px solid var(--border); margin-bottom:1.5rem;">
+            <h4 style="color:var(--gold); font-size:0.85rem; margin-bottom:0.75rem; letter-spacing:0.05em; text-transform:uppercase;">Manage Product Categories</h4>
+            <div id="categoryTags" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+              ${adminData.categories.map(cat => `
+                <div class="cat-pill" style="display:flex; align-items:center; gap:0.4rem; background:var(--card); padding:0.3rem 0.6rem; border-radius:100px; border:1px solid var(--border); font-size:0.75rem;">
+                  <span>${cat}</span>
+                  <button onclick="removeCategory('${cat}')" style="color:#ef4444; font-weight:bold; cursor:pointer;"><i class="ph ph-x"></i></button>
+                </div>
+              `).join('')}
+            </div>
+            <div style="display:flex; gap:0.5rem;">
+              <input type="text" id="newCategoryInput" placeholder="New Category Name..." style="flex:1; background:var(--card); color:white; border:1px solid var(--border); padding:0.5rem; border-radius:4px; font-size:0.8rem;">
+              <button onclick="addCategory()" class="btn btn-primary" style="padding:0.4rem 1rem; font-size:0.75rem;">Add Category</button>
+            </div>
+          </div>
+        `;
+        container.innerHTML = html;
+      }
+
+      window.addCategory = function() {
+        const input = document.getElementById('newCategoryInput');
+        const val = input.value.trim();
+        if (!val) return;
+        if (adminData.categories.includes(val)) return alert('Category already exists');
+        adminData.categories.push(val);
+        syncCategoriesToFirebase();
+        renderCategoryManager();
+        renderAdminProducts(); // Update product dropdowns
+      }
+
+      window.removeCategory = function(cat) {
+        if (!confirm(`Are you sure you want to delete "${cat}"? Products assigned to this category will keep it as a label until updated.`)) return;
+        adminData.categories = adminData.categories.filter(c => c !== cat);
+        syncCategoriesToFirebase();
+        renderCategoryManager();
+        renderAdminProducts();
+      }
+
+      function renderAdminProducts() {
+        const grid = document.getElementById('adminProductsGrid');
+        if (!grid) return;
+        
+        let html = '';
+        adminData.products.forEach((p, idx) => {
+          // Resolve prices from either the new rich schema or legacy simple schema
+          const priceBase   = (p.prices && p.prices.base)   || (p.price ? parseInt(String(p.price).replace(/[^0-9]/g,'')) : 999);
+          const priceSale   = (p.prices && p.prices.sale)   || Math.round(priceBase * 0.75);
+          const priceMember = (p.prices && p.prices.member) || Math.round(priceBase * 0.6);
+          const fitType     = p.fit_type   || 'Regular';
+          const fandomTag   = p.fandom_tag || 'ADIS';
+          const material    = (p.details && p.details.material) || p.material || '100% Cotton';
+          const gsm         = (p.details && p.details.gsm)      || p.gsm      || '220 GSM';
+
+          html += `
+            <div class="product-edit-card" draggable="true" data-idx="${idx}" style="background:var(--card2); border:1px solid var(--border); padding:1rem; border-radius:8px; position:relative;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                <div class="drag-handle" title="Drag to reorder"><i class="ph ph-dots-six-vertical"></i></div>
+                <div style="font-size:0.65rem; color:var(--muted); text-transform:uppercase;">Product #${p.id}</div>
+              </div>
+              <input type="text" id="p_title_${idx}" value="${p.title}" placeholder="Product Title" style="width:100%; margin-bottom:0.5rem; background:var(--card); color:white; border:1px solid var(--border); padding:0.5rem; border-radius:4px;">
+
+              <!-- Pricing Row -->
+              <label style="display:block; font-size:0.65rem; color:var(--muted); margin-bottom:0.3rem; text-transform:uppercase;">Pricing (₹)</label>
+              <div style="display:flex; gap:0.4rem; margin-bottom:0.5rem;">
+                <div style="flex:1;">
+                  <input type="number" id="p_base_${idx}" value="${priceBase}" placeholder="Base" style="width:100%; background:var(--card); color:white; border:1px solid var(--border); padding:0.4rem; border-radius:4px; font-size:0.75rem;">
+                  <div style="font-size:0.55rem; color:var(--muted); text-align:center; margin-top:2px;">BASE</div>
+                </div>
+                <div style="flex:1;">
+                  <input type="number" id="p_sale_${idx}" value="${priceSale}" placeholder="Sale" style="width:100%; background:var(--card); color:#FFE600; border:1px solid rgba(255,230,0,0.3); padding:0.4rem; border-radius:4px; font-size:0.75rem;">
+                  <div style="font-size:0.55rem; color:var(--muted); text-align:center; margin-top:2px;">SALE</div>
+                </div>
+                <div style="flex:1;">
+                  <input type="number" id="p_member_${idx}" value="${priceMember}" placeholder="Member" style="width:100%; background:var(--card); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:0.4rem; border-radius:4px; font-size:0.75rem;">
+                  <div style="font-size:0.55rem; color:var(--muted); text-align:center; margin-top:2px;">MEMBER</div>
+                </div>
+              </div>
+
+              <!-- Fit & Fandom Row -->
+              <div style="display:flex; gap:0.4rem; margin-bottom:0.5rem;">
+                <div style="flex:1;">
+                  <label style="font-size:0.6rem; color:var(--muted); display:block; margin-bottom:0.2rem;">FIT TYPE</label>
+                  <select id="p_fit_${idx}" style="width:100%; background:var(--card); color:white; border:1px solid var(--border); padding:0.4rem; border-radius:4px; font-size:0.75rem;">
+                    ${['Regular','Oversized','Slim'].map(f => `<option value="${f}" ${fitType===f?'selected':''}>${f}</option>`).join('')}
+                  </select>
+                </div>
+                <div style="flex:1;">
+                  <label style="font-size:0.6rem; color:var(--muted); display:block; margin-bottom:0.2rem;">FANDOM TAG</label>
+                  <input type="text" id="p_fandom_${idx}" value="${fandomTag}" placeholder="e.g. Marvel" style="width:100%; background:var(--card); color:white; border:1px solid var(--border); padding:0.4rem; border-radius:4px; font-size:0.75rem;">
+                </div>
+              </div>
+
+              <!-- Material & GSM -->
+              <div style="display:flex; gap:0.4rem; margin-bottom:0.5rem;">
+                <div style="flex:2;">
+                  <label style="font-size:0.6rem; color:var(--muted); display:block; margin-bottom:0.2rem;">MATERIAL</label>
+                  <input type="text" id="p_material_${idx}" value="${material}" placeholder="e.g. 100% Cotton" style="width:100%; background:var(--card); color:white; border:1px solid var(--border); padding:0.4rem; border-radius:4px; font-size:0.75rem;">
+                </div>
+                <div style="flex:1;">
+                  <label style="font-size:0.6rem; color:var(--muted); display:block; margin-bottom:0.2rem;">GSM</label>
+                  <input type="text" id="p_gsm_${idx}" value="${gsm}" placeholder="220 GSM" style="width:100%; background:var(--card); color:white; border:1px solid var(--border); padding:0.4rem; border-radius:4px; font-size:0.75rem;">
+                </div>
+              </div>
+
+              <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem; flex-wrap:wrap;">
+                 <!-- Image 0 -->
+                 <div style="flex:1; min-width:120px; text-align:center;">
+                    <img src="${(p.images && p.images[0]) || p.image || ''}" id="p_preview_0_${idx}" style="width:100%; height:80px; border-radius:4px; object-fit:cover; border:1px solid var(--border); background:var(--card); margin-bottom:0.2rem;">
+                    <input type="hidden" id="p_image_0_${idx}" value="${(p.images && p.images[0]) || p.image || ''}">
+                    <input type="file" accept=".jpg,.jpeg" class="file-img-upload" data-idx="${idx}" data-imgidx="0" style="width:100%; background:var(--card); color:white; border:1px solid var(--border); padding:0.2rem; border-radius:4px; font-size:0.6rem;">
+                    <div id="p_upload_status_0_${idx}" style="font-size:0.6rem; color:var(--gold); display:none;">Uploading...</div>
+                 </div>
+                 <!-- Image 1 -->
+                 <div style="flex:1; min-width:120px; text-align:center;">
+                    <img src="${(p.images && p.images[1]) || ''}" id="p_preview_1_${idx}" style="width:100%; height:80px; border-radius:4px; object-fit:cover; border:1px solid var(--border); background:var(--card); margin-bottom:0.2rem;">
+                    <input type="hidden" id="p_image_1_${idx}" value="${(p.images && p.images[1]) || ''}">
+                    <input type="file" accept=".jpg,.jpeg" class="file-img-upload" data-idx="${idx}" data-imgidx="1" style="width:100%; background:var(--card); color:white; border:1px solid var(--border); padding:0.2rem; border-radius:4px; font-size:0.6rem;">
+                    <div id="p_upload_status_1_${idx}" style="font-size:0.6rem; color:var(--gold); display:none;">Uploading...</div>
+                 </div>
+                 <!-- Image 2 -->
+                 <div style="flex:1; min-width:120px; text-align:center;">
+                    <img src="${(p.images && p.images[2]) || ''}" id="p_preview_2_${idx}" style="width:100%; height:80px; border-radius:4px; object-fit:cover; border:1px solid var(--border); background:var(--card); margin-bottom:0.2rem;">
+                    <input type="hidden" id="p_image_2_${idx}" value="${(p.images && p.images[2]) || ''}">
+                    <input type="file" accept=".jpg,.jpeg" class="file-img-upload" data-idx="${idx}" data-imgidx="2" style="width:100%; background:var(--card); color:white; border:1px solid var(--border); padding:0.2rem; border-radius:4px; font-size:0.6rem;">
+                    <div id="p_upload_status_2_${idx}" style="font-size:0.6rem; color:var(--gold); display:none;">Uploading...</div>
+                 </div>
+                 <!-- Image 3 -->
+                 <div style="flex:1; min-width:120px; text-align:center;">
+                    <img src="${(p.images && p.images[3]) || ''}" id="p_preview_3_${idx}" style="width:100%; height:80px; border-radius:4px; object-fit:cover; border:1px solid var(--border); background:var(--card); margin-bottom:0.2rem;">
+                    <input type="hidden" id="p_image_3_${idx}" value="${(p.images && p.images[3]) || ''}">
+                    <input type="file" accept=".jpg,.jpeg" class="file-img-upload" data-idx="${idx}" data-imgidx="3" style="width:100%; background:var(--card); color:white; border:1px solid var(--border); padding:0.2rem; border-radius:4px; font-size:0.6rem;">
+                    <div id="p_upload_status_3_${idx}" style="font-size:0.6rem; color:var(--gold); display:none;">Uploading...</div>
+                 </div>
+              </div>
+
+              <div style="margin-bottom:0.5rem;">
+                <label style="display:block; font-size:0.65rem; color:var(--muted); margin-bottom:0.2rem; text-transform:uppercase; letter-spacing:0.05em;">Product Category</label>
+                <select id="p_category_${idx}" style="width:100%; background:var(--card); color:white; border:1px solid var(--border); padding:0.5rem; border-radius:4px; font-size:0.8rem;">
+                  ${adminData.categories.map(cat => `<option value="${cat}" ${p.category === cat || p.color === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+                  ${(p.category && !adminData.categories.includes(p.category)) ? `<option value="${p.category}" selected>${p.category}</option>` : ''}
+                  ${(!p.category && p.color && !adminData.categories.includes(p.color)) ? `<option value="${p.color}" selected>${p.color}</option>` : ''}
+                </select>
+              </div>
+              <textarea id="p_desc_${idx}" placeholder="Description" style="width:100%; margin-bottom:0.5rem; background:var(--card); color:white; border:1px solid var(--border); padding:0.5rem; border-radius:4px; min-height:60px;">${p.desc || ''}</textarea>
+              <div style="font-size:0.7rem; color:var(--muted); margin-bottom:0.5rem; display:flex; align-items:center; gap:0.4rem;">
+                <i class="ph ph-eye"></i> Current Views: <strong style="color:var(--gold);">${p.views || 0}</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-top:0.5rem; flex-wrap:wrap; gap:0.5rem;">
+                  <div style="display:flex; gap:0.25rem;">
+                     <button class="btn btn-outline btn-move-up" data-idx="${idx}" title="Move Up" style="padding:0.3rem 0.5rem; font-size:0.8rem;"><i class="ph ph-caret-up"></i></button>
+                     <button class="btn btn-outline btn-move-down" data-idx="${idx}" title="Move Down" style="padding:0.3rem 0.5rem; font-size:0.8rem;"><i class="ph ph-caret-down"></i></button>
+                  </div>
+                  <div style="display:flex; gap:0.4rem;">
+                     <button class="btn btn-primary btn-save-product" data-idx="${idx}" style="font-size:0.7rem; padding:0.3rem 0.6rem;">Save Updates</button>
+                     <button class="btn btn-outline btn-del-product" data-idx="${idx}" style="font-size:0.7rem; padding:0.3rem 0.6rem; border-color:#ef4444; color:#ef4444;">Delete</button>
+                  </div>
+               </div>
+            </div>
+          `;
+        });
+        grid.innerHTML = html || '<p style="color:var(--muted); font-size:0.85rem;">No products found in Firebase. Add one above.</p>';
+
+        grid.querySelectorAll('.btn-save-product').forEach(btn => {
+           btn.addEventListener('click', (e) => {
+               const idx = parseInt(e.target.dataset.idx);
+               const existing = adminData.products[idx];
+               
+               // Collect non-empty images
+               let imgs = [];
+               for(let i=0; i<4; i++){
+                  const val = document.getElementById(`p_image_${i}_${idx}`).value;
+                  if(val && val.trim() !== '') imgs.push(val);
+               }
+               
+               if(imgs.length === 0) return alert('You must provide at least 1 image for the product.');
+
+               // Read new rich-schema fields
+               const basePrice   = parseInt(document.getElementById(`p_base_${idx}`).value)   || 999;
+               const salePrice   = parseInt(document.getElementById(`p_sale_${idx}`).value)   || Math.round(basePrice*0.75);
+               const memberPrice = parseInt(document.getElementById(`p_member_${idx}`).value) || Math.round(basePrice*0.6);
+               const fitType     = document.getElementById(`p_fit_${idx}`).value || 'Regular';
+               const fandomTag   = document.getElementById(`p_fandom_${idx}`).value || 'ADIS';
+               const material    = document.getElementById(`p_material_${idx}`).value || '100% Cotton';
+               const gsm         = document.getElementById(`p_gsm_${idx}`).value || '220 GSM';
+
+               // Save the FULL rich-schema product — this is what the frontend reads
+               adminData.products[idx] = {
+                   id: String(existing.id),
+                   title: document.getElementById(`p_title_${idx}`).value,
+                   category: document.getElementById(`p_category_${idx}`).value,
+                   fit_type: fitType,
+                   fandom_tag: fandomTag,
+                   badges: existing.badges || [],
+                   prices: { base: basePrice, sale: salePrice, member: memberPrice },
+                   image: imgs[0],   // legacy compat
+                   price: `₹${salePrice}`, // legacy compat
+                   images: imgs,
+                   variants: existing.variants || [
+                     { size: 'S', stock: 10 }, { size: 'M', stock: 20 },
+                     { size: 'L', stock: 20 }, { size: 'XL', stock: 10 }, { size: 'XXL', stock: 5 }
+                   ],
+                   details: {
+                     material: material,
+                     gsm: gsm,
+                     wash_care: (existing.details && existing.details.wash_care) || 'Machine wash cold'
+                   },
+                   desc: document.getElementById(`p_desc_${idx}`).value,
+                   rating: existing.rating || 5.0,
+                   views: existing.views || 0
+               };
+               syncProductsToFirebase();
+               logProductToHistory(adminData.products[idx]);
+           });
+        });
+
+        // Firebase Image Uploader Logic
+        grid.querySelectorAll('.file-img-upload').forEach(input => {
+            input.addEventListener('change', async (e) => {
+                const idx = parseInt(e.target.dataset.idx);
+                const imgIdx = parseInt(e.target.dataset.imgidx);
+                const file = e.target.files[0];
+                if (!file) return;
+                if (!file.name.toLowerCase().endsWith('.jpg') && !file.name.toLowerCase().endsWith('.jpeg')) {
+                    alert('Only .jpg or .jpeg images are allowed for product uploads.');
+                    return e.target.value = '';
+                }
+
+                const statusEl = document.getElementById(`p_upload_status_${imgIdx}_${idx}`);
+                const previewEl = document.getElementById(`p_preview_${imgIdx}_${idx}`);
+                const hiddenUrlEl = document.getElementById(`p_image_${imgIdx}_${idx}`);
+                
+                statusEl.style.display = 'block';
+                statusEl.textContent = 'Compressing Image...';
+                statusEl.style.color = 'var(--gold)';
+
+                try {
+                    const base64Data = await compressImageToBase64(file, 800);
+                    hiddenUrlEl.value = base64Data;
+                    previewEl.src = base64Data;
+                    
+                    statusEl.textContent = 'Ready! Click Save Updates.';
+                    statusEl.style.color = '#10b981';
+                } catch (err) {
+                    console.error('Compression failed', err);
+                    statusEl.textContent = 'Compression Failed. Try again.';
+                    statusEl.style.color = '#ef4444';
+                }
+            });
+        });
+
+        grid.querySelectorAll('.btn-del-product').forEach(btn => {
+           btn.addEventListener('click', async (e) => {
+               if(confirm('Delete this product? It will be saved to Product History so you can Republish it anytime.')) {
+                   const idx = parseInt(btn.dataset.idx);
+                   const productToDelete = adminData.products[idx];
+                   // ✅ Always log to history BEFORE deleting
+                   await logProductToHistory(productToDelete);
+                   adminData.products.splice(idx, 1);
+                   syncProductsToFirebase();
+                   showToast(`"${productToDelete.title}" deleted and saved to History.`);
+               }
+           });
+        });
+
+        // Repositioning logic via Drag and Drop
+        let draggedIdx = null;
+        grid.querySelectorAll('.product-edit-card').forEach(card => {
+           card.addEventListener('dragstart', (e) => {
+              draggedIdx = parseInt(card.dataset.idx);
+              card.classList.add('dragging');
+              e.dataTransfer.effectAllowed = 'move';
+           });
+           card.addEventListener('dragend', () => {
+              card.classList.remove('dragging');
+           });
+           card.addEventListener('dragover', (e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+           });
+           card.addEventListener('drop', (e) => {
+              e.preventDefault();
+              const targetIdx = parseInt(card.dataset.idx);
+              if (draggedIdx !== null && draggedIdx !== targetIdx) {
+                 const movedItem = adminData.products.splice(draggedIdx, 1)[0];
+                 adminData.products.splice(targetIdx, 0, movedItem);
+                 syncProductsToFirebase();
+              }
+           });
+        });
+
+        // Legacy button repositioning logic
+        grid.querySelectorAll('.btn-move-up').forEach(btn => {
+           btn.addEventListener('click', () => {
+              const idx = parseInt(btn.dataset.idx);
+              if (idx > 0) {
+                 const current = adminData.products[idx];
+                 adminData.products.splice(idx, 1);
+                 adminData.products.splice(idx - 1, 0, current);
+                 syncProductsToFirebase();
+              }
+           });
+        });
+
+        grid.querySelectorAll('.btn-move-down').forEach(btn => {
+           btn.addEventListener('click', () => {
+              const idx = parseInt(btn.dataset.idx);
+              if (idx < adminData.products.length - 1) {
+                 const current = adminData.products[idx];
+                 adminData.products.splice(idx, 1);
+                 adminData.products.splice(idx + 1, 0, current);
+                 syncProductsToFirebase();
+              }
+           });
+        });
+      }
+
+      function renderAdminHistory() {
+         const grid = document.getElementById('adminHistoryGrid');
+         if (!grid) return;
+         
+         let html = '';
+         // Filter out null entries (from Firebase sparse arrays) and sort by lastModified
+         const validHistory = adminData.history.filter(p => p && p.id != null);
+         const sortedHistory = validHistory.sort((a, b) => {
+            const aTime = a.lastModified || '';
+            const bTime = b.lastModified || '';
+            return bTime.localeCompare(aTime);
+         });
+         
+         sortedHistory.forEach((p, idx) => {
+            const isLive = adminData.products.some(active => active.id === p.id);
+            html += `
+               <div class="product-edit-card" style="opacity: ${isLive ? '0.7' : '1'};">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                     <div style="font-size:0.6rem; color:var(--muted);">ID: ${p.id}</div>
+                     ${isLive ? '<span class="status-badge" style="background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2);">LIVE</span>' : '<span class="status-badge" style="background:rgba(255,165,0,0.1); color:orange; border:1px solid rgba(255,165,0,0.2);">ARCHIVED</span>'}
+                  </div>
+                  <img src="${p.image || (p.images && p.images[0]) || ''}" style="width:100%; height:120px; object-fit:cover; border-radius:6px; margin-bottom:0.5rem;">
+                  <h4 style="font-size:0.85rem; color:var(--white); margin-bottom:0.2rem;">${p.title}</h4>
+                  <div style="font-size:0.7rem; color:var(--gold); margin-bottom:0.5rem;">${p.price} · ${p.category}</div>
+                  <div style="display:flex; gap:0.4rem; margin-top:auto;">
+                     <button class="btn btn-primary w-full btn-republish" data-id="${p.id}" ${isLive ? 'disabled' : ''}>
+                        ${isLive ? 'Already Live' : '<i class="ph ph-arrow-counter-clockwise"></i> Republish'}
+                     </button>
+                  </div>
+               </div>
+            `;
+         });
+         
+         grid.innerHTML = html || '<p style="color:var(--muted); font-size:0.8rem;">No products in history yet.</p>';
+         
+         grid.querySelectorAll('.btn-republish').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+               const pid = parseInt(btn.dataset.id);
+               republishProduct(pid);
+            });
+         });
+      }
+
+      function republishProduct(pid) {
+         const item = adminData.history.find(h => h.id === pid);
+         if (!item) return;
+         
+         // Check if already live (double check)
+         if(adminData.products.some(p => p.id === pid)) return alert('This product is already live.');
+         
+         if(confirm(`Restore "${item.title}" to the active storefront?`)) {
+            // Add to the top of products
+            adminData.products.unshift({
+               ...item,
+               views: 0 // Reset views or keep? Resetting seems logical for a "new" republish
+            });
+            syncProductsToFirebase();
+            showToast(`Restored "${item.title}" successfully!`);
+         }
+      }
+
+      document.getElementById('addAdminProductBtn')?.addEventListener('click', () => {
+         const newId = 'admin-' + Date.now();
+         const newProduct = {
+             id: newId,
+             title: 'NEW PRODUCT',
+             category: adminData.categories[0] || 'Men',
+             fit_type: 'Regular',
+             fandom_tag: 'ADIS',
+             badges: ['NEW'],
+             prices: { base: 999, sale: 749, member: 599 },
+             price: '₹749',  // legacy compat
+             image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80',
+             images: ['https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80'],
+             variants: [
+               { size: 'S', stock: 10 }, { size: 'M', stock: 20 },
+               { size: 'L', stock: 20 }, { size: 'XL', stock: 10 }, { size: 'XXL', stock: 5 }
+             ],
+             details: { material: '100% Cotton', gsm: '220 GSM', wash_care: 'Machine wash cold' },
+             desc: '',
+             rating: 5.0,
+             views: 0
+         };
+         adminData.products.unshift(newProduct);
+         syncProductsToFirebase();
+         logProductToHistory(newProduct);
+      });
+
+      document.getElementById('btnResetViews')?.addEventListener('click', async () => {
+         if (!confirm('Are you absolutely sure? This will PERMANENTLY reset ALL product view counts to 0 and clear tracking history.')) return;
+         try {
+            const { set, ref, remove } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
+            adminData.products.forEach((p, idx) => {
+               p.views = 0;
+               set(ref(firebaseDB.db, `products/${idx}/views`), 0);
+            });
+            remove(ref(firebaseDB.db, 'product_ips'));
+            alert('All product views have been reset successfully!');
+            location.reload();
+         } catch(e) { console.error(e); alert('Reset failed: ' + e.message); }
+      });
+
+      // Handle Notification Blast
+      document.getElementById('btnSendBlast')?.addEventListener('click', async () => {
+         const btn = document.getElementById('btnSendBlast');
+         const title = document.getElementById('blastTitle').value.trim();
+         const body = document.getElementById('blastBody').value.trim();
+         
+         if (!title || !body) return alert('Please enter both title and message.');
+         if (!confirm('Are you sure you want to send this broadcast to ALL active users?')) return;
+
+         btn.disabled = true;
+         btn.innerText = 'SENDING...';
+
+         try {
+            const { set, ref } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
+            await set(ref(firebaseDB.db, 'admin_notifications/latest'), {
+               title: title,
+               body: body,
+               time: new Date().toISOString()
+            });
+            alert('Blast sent successfully! All active users will see it instantly.');
+            document.getElementById('blastTitle').value = '';
+            document.getElementById('blastBody').value = '';
+         } catch (e) {
+            console.error(e);
+            alert('Failed to send blast: ' + e.message);
+         } finally {
+            btn.disabled = false;
+            btn.innerText = 'SEND BLAST';
+         }
+      });
+
+      function renderUsersAndOrders() {
+         const usersStr = localStorage.getItem('adis_users') || '{}';
+         const ordersStr = localStorage.getItem('adis_orders') || '[]';
+         
+         let users = {};
+         let orders = [];
+         try { users = JSON.parse(usersStr); } catch(e){}
+         try { orders = JSON.parse(ordersStr); } catch(e){}
+         
+         const tbodyUsers = document.getElementById('usersTableBody');
+         if (tbodyUsers) {
+            let html = '';
+            Object.values(users).forEach(u => {
+               const date = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A';
+               html += `<tr>
+                  <td>${u.name || 'N/A'}</td>
+                  <td>${u.phone || 'N/A'}</td>
+                  <td>${u.gender || 'N/A'}</td>
+                  <td>${u.birthday || 'N/A'}</td>
+                  <td>${date}</td>
+               </tr>`;
+            });
+            tbodyUsers.innerHTML = html || '<tr><td colspan="5" style="text-align:center;color:var(--muted);">No users found.</td></tr>';
+         }
+         
+         const tbodyOrders = document.getElementById('ordersTableBody');
+         if (tbodyOrders) {
+            let html = '';
+            orders.sort((a,b) => new Date(b.date) - new Date(a.date));
+            orders.forEach(o => {
+               const date = new Date(o.date).toLocaleDateString();
+               const total = typeof o.total === 'number' ? '₹' + o.total.toFixed(2) : (o.total || '0');
+               html += `<tr>
+                  <td>${o.orderId || 'N/A'}</td>
+                  <td>${o.phone || 'N/A'}</td>
+                  <td>${date}</td>
+                  <td>${o.items ? o.items.length + ' items' : 'N/A'}</td>
+                  <td>${total}</td>
+                  <td><span class="status-badge" style="background:rgba(59,130,246,0.2);color:#3b82f6;">${o.status || 'Pending'}</span></td>
+               </tr>`;
+            });
+            tbodyOrders.innerHTML = html || '<tr><td colspan="6" style="text-align:center;color:var(--muted);">No orders found.</td></tr>';
+         }
+      }
+
+      window.addEventListener('storage', (e) => {
+         if (e.key === 'adis_users' || e.key === 'adis_orders') {
+            if (document.getElementById('tab-users-orders')?.classList.contains('active')) {
+               renderUsersAndOrders();
+            }
+         }
+         if (e.key === 'ADIS_products') {
+            try {
+               adminData.products = JSON.parse(e.newValue || '[]');
+               if (document.getElementById('tab-products')?.classList.contains('active')) renderAdminProducts();
+            } catch(err) {}
+         }
+         if (e.key === 'ADIS_categories') {
+            try {
+               adminData.categories = JSON.parse(e.newValue || '[]');
+               if (document.getElementById('tab-products')?.classList.contains('active')) renderCategoryManager();
+            } catch(err) {}
+         }
+         if (e.key === 'ADIS_landingConfig') {
+            try {
+               adminData.landingConfig = JSON.parse(e.newValue || 'null');
+               if (document.getElementById('tab-landing')?.classList.contains('active')) renderAdminLanding();
+            } catch(err) {}
+         }
+      });
+
+      // Tabs
+      document.querySelectorAll('[data-tab]').forEach(el => {
+        el.addEventListener('click', e => {
+          e.preventDefault();
+          const tab = el.dataset.tab;
+          if (tab === 'users-orders') renderUsersAndOrders();
+          document.querySelectorAll('.admin-nav a').forEach(a => a.classList.remove('active'));
+          document.querySelector(`.admin-nav [data-tab="${tab}"]`)?.classList.add('active');
+          document.querySelectorAll('.tab-nav button').forEach(b => b.classList.remove('active'));
+          document.querySelector(`.tab-nav [data-tab="${tab}"]`)?.classList.add('active');
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          document.getElementById(`tab-${tab}`)?.classList.add('active');
+          document.querySelector('.admin-header h1').textContent = tab.charAt(0).toUpperCase() + tab.slice(1);
+          
+          // Close mobile sidebar if open
+          const sidebar = document.getElementById('adminSidebar');
+          if (sidebar && sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+          }
+        });
+      });
+
+      // Navigate to engagement from active sessions card
+      document.getElementById('cardSessions')?.addEventListener('click', () => {
+         const btn = document.querySelector('.admin-nav [data-tab="engagement"]');
+         if (btn) {
+            btn.click();
+            setTimeout(() => {
+               document.getElementById('engagementTable')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+         }
+      });
+
+      let engagementFilter = 'all';
+      function filterEngagement(type) {
+         engagementFilter = type;
+         document.getElementById('filterAll').classList.toggle('active', type === 'all');
+         document.getElementById('filterUnsub').classList.toggle('active', type === 'unsubscribed');
+         renderEngagementCenter();
+      }
+
+      // --- Date Filter Logic ---
+      let currentDateFilter = 'today';
+      let dropdownView = 'main';
+      
+      function toggleDateDropdown() {
+         const drop = document.getElementById('dateDropdown');
+         if (!drop.classList.contains('show')) {
+             dropdownView = 'main'; // reset view when opening
+         }
+         drop.classList.toggle('show');
+         if(drop.classList.contains('show')) {
+             renderDateDropdown();
+         }
+      }
+      
+      window.addEventListener('click', function(e) {
+         if (!e.target.closest('#dateFilterBtn') && !e.target.closest('#dateDropdown')) {
+            const drop = document.getElementById('dateDropdown');
+            if(drop) {
+                drop.classList.remove('show');
+                dropdownView = 'main'; // reset view
+            }
+         }
+      });
+      
+      function formatDateShort(dateObj) {
+         return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+
+      function getDateFilterOptions() {
+         const now = new Date();
+         const getPast = (days) => new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+         const startOfYear = new Date(now.getFullYear(), 0, 1);
+         const todayStr = formatDateShort(now);
+         
+         return [
+            { id: 'today', label: 'Today' },
+            { id: '7days', label: `Last 7 days: ${formatDateShort(getPast(6))} - ${todayStr}` },
+            { id: '14days', label: `Last 14 days: ${formatDateShort(getPast(13))} - ${todayStr}` },
+            { id: '28days', label: `Last 28 days: ${formatDateShort(getPast(27))} - ${todayStr}` },
+            { id: '60days', label: `Last 60 days: ${formatDateShort(getPast(59))} - ${todayStr}` },
+            { id: '90days', label: `Last 90 days: ${formatDateShort(getPast(89))} - ${todayStr}` },
+            { id: 'year', label: `This year: ${formatDateShort(startOfYear)} - ${todayStr}` },
+            { id: 'alltime', label: `All Time`, isMenu: false }
+         ];
+      }
+
+      function getMonthlyFilterOptions() {
+         const now = new Date();
+         const months = [];
+         for(let i=0; i<6; i++) {
+             const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+             const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+             const id = `month_${d.getFullYear()}_${d.getMonth()}`;
+             months.push({ id, label });
+         }
+         return months;
+      }
+
+      function renderDateDropdown(e) {
+         if (e) e.stopPropagation();
+         let html = '';
+         if (dropdownView === 'main') {
+             const options = getDateFilterOptions();
+             html = options.map((opt, i) => {
+                if (opt.isMenu) return `<div class="date-option" onclick="selectDateFilter('${opt.id}')"><span>${opt.label}</span></div>`;
+                return `<div class="date-option ${currentDateFilter === opt.id ? 'active' : ''}" onclick="selectDateFilter('${opt.id}')">
+                   <span>${opt.label}</span>
+                   <div class="radio-circle"></div>
+                </div>`;
+             }).join('');
+             
+             const extras = `
+                <div style="height:1px;background:var(--border);margin:0.5rem 0;"></div>
+                <div class="date-option" onclick="dropdownView='monthly'; renderDateDropdown(event)"><span>Monthly</span><span class="arrow"><i class="ph ph-caret-right"></i></span></div>
+                <div class="date-option" onclick="dropdownView='custom'; renderDateDropdown(event)"><span>Custom Range</span><span class="arrow"><i class="ph ph-caret-right"></i></span></div>
+             `;
+             html += extras;
+         } else if (dropdownView === 'monthly') {
+             html += `<div class="date-option" style="color:var(--muted); justify-content:flex-start; gap:0.5rem;" onclick="dropdownView='main'; renderDateDropdown(event)"><i class="ph ph-caret-left"></i> Back</div>
+                      <div style="height:1px;background:var(--border);margin:0.5rem 0;"></div>`;
+             const months = getMonthlyFilterOptions();
+             html += months.map(opt => {
+                return `<div class="date-option ${currentDateFilter === opt.id ? 'active' : ''}" onclick="selectDateFilter('${opt.id}', '${opt.label}')">
+                   <span>${opt.label}</span>
+                   <div class="radio-circle"></div>
+                </div>`;
+             }).join('');
+         } else if (dropdownView === 'custom') {
+             html += `<div class="date-option" style="color:var(--muted); justify-content:flex-start; gap:0.5rem;" onclick="dropdownView='main'; renderDateDropdown(event)"><i class="ph ph-caret-left"></i> Back</div>
+                      <div style="height:1px;background:var(--border);margin:0.5rem 0;"></div>
+                      <div style="padding: 0.5rem; display:flex; flex-direction:column; gap:0.8rem;">
+                         <div>
+                             <label style="font-size:0.75rem; color:var(--muted); margin-bottom:0.2rem; display:block;">Start Date</label>
+                             <input type="date" id="customStartDate" style="width:100%;background:var(--surface); border:1px solid var(--border); color:var(--text); padding:0.4rem; border-radius:4px; font-family:inherit; color-scheme: dark;">
+                         </div>
+                         <div>
+                             <label style="font-size:0.75rem; color:var(--muted); margin-bottom:0.2rem; display:block;">End Date</label>
+                             <input type="date" id="customEndDate" style="width:100%;background:var(--surface); border:1px solid var(--border); color:var(--text); padding:0.4rem; border-radius:4px; font-family:inherit; color-scheme: dark;">
+                         </div>
+                         <button onclick="applyCustomDate(event)" style="margin-top:0.5rem; background:var(--gold); color:black; border:none; padding:0.5rem; border-radius:4px; cursor:pointer; font-weight:600;">Apply Range</button>
+                      </div>`;
+         }
+         
+         document.getElementById('dateDropdown').innerHTML = html;
+      }
+
+      function applyCustomDate(e) {
+          e.stopPropagation();
+          const start = document.getElementById('customStartDate').value;
+          const end = document.getElementById('customEndDate').value;
+          if (!start || !end) return alert('Please select both start and end dates');
+          if (new Date(start) > new Date(end)) return alert('Start date must be before end date');
+          
+          const label = `${formatDateShort(new Date(start + 'T12:00:00Z'))} - ${formatDateShort(new Date(end + 'T12:00:00Z'))}`;
+          selectDateFilter(`custom_${start}_${end}`, label);
+      }
+
+      function selectDateFilter(id, forceLabel) {
+         currentDateFilter = id;
+         const options = getDateFilterOptions();
+         const selected = options.find(o => o.id === id);
+         
+         let label = forceLabel || (selected ? selected.label.split(':')[0] : 'Custom');
+         
+         document.getElementById('currentDateLabel').textContent = label;
+         document.getElementById('dateDropdown').classList.remove('show');
+         document.getElementById('labelLifetime').textContent = id === 'alltime' ? 'Lifetime Traffic' : (id === 'today' ? 'Views Today' : 'Traffic (Selected Period)');
+         
+         dropdownView = 'main'; // reset to main menu on selection
+         
+         if (adminData && adminData.analytics) {
+             renderDashboardData();
+         }
+      }
+      
+      function isDateInFilterRange(dateString) {
+         if (!dateString) return true;
+         // Handle both YYYY-MM-DD keys and full ISO strings
+         const isJustDate = dateString.length === 10 && dateString.indexOf('-') === 4;
+         const targetDate = isJustDate ? new Date(dateString + 'T12:00:00Z') : new Date(dateString);
+         
+         const now = new Date();
+         let startDate = new Date();
+         startDate.setHours(0,0,0,0);
+         let endDate = new Date(2100, 0, 1);
+         
+         if (currentDateFilter === 'alltime') return true;
+         if (currentDateFilter === 'today') {
+            endDate = new Date(now.getTime() + 24 * 3600 * 1000);
+         } else if (currentDateFilter === '7days') {
+            startDate = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000); startDate.setHours(0,0,0,0);
+         } else if (currentDateFilter === '14days') {
+            startDate = new Date(now.getTime() - 13 * 24 * 60 * 60 * 1000); startDate.setHours(0,0,0,0);
+         } else if (currentDateFilter === '28days') {
+            startDate = new Date(now.getTime() - 27 * 24 * 60 * 60 * 1000); startDate.setHours(0,0,0,0);
+         } else if (currentDateFilter === '60days') {
+            startDate = new Date(now.getTime() - 59 * 24 * 60 * 60 * 1000); startDate.setHours(0,0,0,0);
+         } else if (currentDateFilter === '90days') {
+            startDate = new Date(now.getTime() - 89 * 24 * 60 * 60 * 1000); startDate.setHours(0,0,0,0);
+         } else if (currentDateFilter === 'year') {
+            startDate = new Date(now.getFullYear(), 0, 1);
+         } else if (currentDateFilter.startsWith('month_')) {
+            const parts = currentDateFilter.split('_');
+            startDate = new Date(parseInt(parts[1]), parseInt(parts[2]), 1);
+            endDate = new Date(parseInt(parts[1]), parseInt(parts[2]) + 1, 0, 23, 59, 59);
+         } else if (currentDateFilter.startsWith('custom_')) {
+            const parts = currentDateFilter.split('_');
+            startDate = new Date(parts[1] + 'T00:00:00Z');
+            endDate = new Date(parts[2] + 'T23:59:59Z');
+         }
+         
+         return targetDate >= startDate && targetDate <= endDate;
+      }
+      // --- End Date Filter Logic ---
+
+      function renderDashboardData() {
+        const analytics = adminData.analytics;
+        const today = new Date().toISOString().slice(0, 10);
+        
+        let todayViews = 0;
+        if (analytics.pageViews && analytics.pageViews[today]) {
+            const viewsObj = analytics.pageViews[today];
+            // Sometimes it's pushed as individual items, sometimes as counters. We should sum all numeric values.
+            todayViews = Object.values(viewsObj).reduce((s, v) => s + (typeof v === 'number' ? v : 1), 0);
+        }
+
+        document.getElementById('statViews').textContent = todayViews;
+        
+        // Period Traffic
+        let lifetimeViews = 0;
+        let productViews = {};
+        if (analytics.pageViews) {
+            Object.entries(analytics.pageViews).forEach(([dateStr, dateObj]) => {
+                if (!isDateInFilterRange(dateStr)) return;
+                Object.entries(dateObj).forEach(([route, val]) => {
+                    const hits = typeof val === 'number' ? val : 1;
+                    lifetimeViews += hits;
+                    
+                    // Track product views for this specific period
+                    if (route.includes('/product-detail.html?id=')) {
+                        const idMatch = route.match(/id=(\d+)/);
+                        if (idMatch) {
+                            const pid = idMatch[1];
+                            productViews[pid] = (productViews[pid] || 0) + hits;
+                        }
+                    }
+                });
+            });
+        }
+        document.getElementById('statLifetime').textContent = lifetimeViews;
+
+        // Top Viewed Product (Filtered by Period)
+        let topProductStr = '-';
+        if (adminData.products && adminData.products.length > 0 && Object.keys(productViews).length > 0) {
+            const topPid = Object.keys(productViews).reduce((a, b) => productViews[a] > productViews[b] ? a : b);
+            const topProd = adminData.products.find(p => String(p.id) === String(topPid));
+            if (topProd) {
+                topProductStr = `${topProd.title} (${productViews[topPid]} views)`;
+            }
+        }
+        document.getElementById('statTopProduct').textContent = topProductStr;
+
+        // Top Customer (from Leads, Filtered by Period)
+        let topCustomerStr = '-';
+        if (adminData.leads && adminData.leads.length > 0) {
+            const customerCounts = {};
+            adminData.leads.forEach(l => {
+                const dateStr = l.date || new Date().toISOString().slice(0, 10);
+                if (!isDateInFilterRange(dateStr)) return;
+                const key = l.email || l.whatsapp || l.name;
+                if(key) customerCounts[key] = (customerCounts[key] || 0) + 1;
+            });
+            if (Object.keys(customerCounts).length > 0) {
+                const topKey = Object.keys(customerCounts).reduce((a, b) => customerCounts[a] > customerCounts[b] ? a : b);
+                const leadRecord = adminData.leads.find(l => l.email === topKey || l.whatsapp === topKey || l.name === topKey);
+                topCustomerStr = leadRecord.name || topKey;
+            }
+        }
+        document.getElementById('statTopCustomer').textContent = topCustomerStr;
+
+        // Total Cart Adds (Filtered by Period)
+        let cartAddsCount = 0;
+        if (analytics.cartAdds) {
+            cartAddsCount = analytics.cartAdds.filter(c => {
+                const dateStr = c.time ? new Date(c.time).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
+                return isDateInFilterRange(dateStr);
+            }).length;
+        }
+        document.getElementById('statCartAdds').textContent = cartAddsCount;
+        
+        // Active Sessions (Living Visitors within 5 mins)
+        let activeNow = 0;
+        const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        if (adminData.living_visitors) {
+            activeNow = Object.values(adminData.living_visitors).filter(v => v.lastSeen > fiveMinsAgo).length;
+        }
+        document.getElementById('statSessions').textContent = activeNow;
+
+        renderAdvancedInsights(activeNow);
+
+        // Traffic chart (dynamic based on filter)
+        const chartBars = document.getElementById('chartBars');
+        let daysCount = 7;
+        let chartEndDate = new Date();
+        
+        if (currentDateFilter === 'today') daysCount = 1;
+        else if (currentDateFilter === '14days') daysCount = 14;
+        else if (currentDateFilter === '28days') daysCount = 28;
+        else if (currentDateFilter === '60days') daysCount = 60;
+        else if (currentDateFilter === '90days') daysCount = 90;
+        else if (currentDateFilter === 'year') {
+           const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+           daysCount = Math.ceil((Date.now() - startOfYear.getTime()) / (1000 * 3600 * 24));
+        } else if (currentDateFilter === 'alltime') {
+           daysCount = 90; // cap visual chart at 30 days for 'All Time'
+        } else if (currentDateFilter.startsWith('month_')) {
+           const parts = currentDateFilter.split('_');
+           const sy = parseInt(parts[1]), sm = parseInt(parts[2]);
+           const eDate = new Date(sy, sm + 1, 0); // last day of month
+           if (eDate < chartEndDate) chartEndDate = eDate;
+           daysCount = eDate.getDate();
+        } else if (currentDateFilter.startsWith('custom_')) {
+           const parts = currentDateFilter.split('_');
+           const sDate = new Date(parts[1] + 'T00:00:00Z');
+           const eDate = new Date(parts[2] + 'T23:59:59Z');
+           if (eDate < chartEndDate) chartEndDate = eDate;
+           daysCount = Math.floor((eDate - sDate) / (1000 * 3600 * 24)) + 1;
+        }
+        
+        let visualDaysCount = Math.min(daysCount, 30); // Prevent CSS overflow
+
+        const days = [];
+        for (let i = visualDaysCount - 1; i >= 0; i--) {
+          const d = new Date(chartEndDate.getTime()); 
+          d.setDate(d.getDate() - i);
+          const dateStr = d.toISOString().slice(0, 10);
+          let count = 0;
+          if (analytics.pageViews && analytics.pageViews[dateStr]) {
+              const viewsObj = analytics.pageViews[dateStr];
+              count = Object.values(viewsObj).reduce((s, v) => s + (typeof v === 'number' ? v : 1), 0);
+          }
+          let labelStr = d.toLocaleDateString('en', { weekday: 'short' });
+          if(visualDaysCount > 14) labelStr = d.getDate(); // Use day of month if many bars
+          
+          days.push({ label: labelStr, count, date: dateStr });
+        }
+        const maxCount = Math.max(...days.map(d => d.count), 1);
+        chartBars.innerHTML = days.map(d => {
+          const height = Math.max(4, (d.count / maxCount) * 100);
+          return `<div class="chart-bar" style="height:${height}%;" title="${d.date}: ${d.count} views">
+            <span class="chart-bar-value">${d.count}</span>
+            <span class="chart-bar-label">${d.label}</span>
+          </div>`;
+        }).join('');
+
+        // Recent activity
+        const recentRaw = (analytics.clicks || []).filter(c => {
+           const dateStr = c.time ? new Date(c.time).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
+           return isDateInFilterRange(dateStr);
+        });
+        const recent = recentRaw.slice(-8).reverse();
+        document.getElementById('recentActivity').innerHTML = recent.length === 0
+          ? '<p style="color:var(--muted);font-size:0.85rem;">No activity found in selected period.</p>'
+          : recent.map(c => {
+            const time = new Date(c.time || Date.now()).toLocaleTimeString();
+            const dot = (c.element || '').includes('ADD') || (c.element || '').includes('CART') ? 'orange' : c.page === '/' ? 'green' : 'blue';
+            return `<div class="activity-item"><span class="activity-dot ${dot}"></span><span>${(c.element||'').slice(0,35)}</span><span class="activity-time">${c.page||''} · ${time}</span></div>`;
+          }).join('');
+
+        function renderAdvancedInsights(activeNow) {
+           const insights = { 
+              referrers: {}, 
+              devices: { Mobile: 0, Desktop: 0 }, 
+              pages: {},
+              funnel: { views: 0, cart: 0, leads: 0 } 
+           };
+
+           // PRUNE OLD PRESENCE (Clean up once in a while)
+           if (Math.random() < 0.05 && firebaseDB) {
+              const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+              import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js').then(({ set, ref, remove }) => {
+                 Object.entries(adminData.living_visitors || {}).forEach(([vid, v]) => {
+                    if (v.lastSeen < oneDayAgo) remove(ref(firebaseDB.db, `living_visitors/${vid}`));
+                 });
+              });
+           }
+
+           // Process PageViews...
+           const rawViews = adminData.analytics.pageViews || {};
+           Object.values(rawViews).forEach(day => {
+              Object.values(day).forEach(v => {
+                 if (typeof v === 'object') {
+                    const ref = v.referrer || 'direct';
+                    insights.referrers[ref] = (insights.referrers[ref] || 0) + 1;
+                    
+                    const isMob = v.device?.platform?.includes('Win') || v.device?.platform?.includes('Mac') ? 'Desktop' : 'Mobile';
+                    insights.devices[isMob]++;
+
+                    const pg = v.page || '/';
+                    insights.pages[pg] = (insights.pages[pg] || 0) + 1;
+                    
+                    insights.funnel.views++;
+                 }
+              });
+           });
+
+           // Add Mock Data for Demo if empty
+           if (Object.keys(insights.referrers).length === 0) {
+              insights.referrers['instagram.com / social'] = 842;
+              insights.referrers['tiktok.com / social'] = 530;
+              insights.referrers['youtube.com / social'] = 210;
+              insights.referrers['google.com / organic'] = 1250;
+              insights.referrers['direct'] = 450;
+              insights.devices.Mobile = 2400;
+              insights.devices.Desktop = 672;
+              insights.funnel.views = 3072;
+           }
+
+           // Conversion points
+           insights.funnel.cart = adminData.analytics.cartAdds?.length || 0;
+           insights.funnel.leads = adminData.leads?.length || 0;
+
+           // Render Referrers
+           const refEl = document.getElementById('insightsReferrers');
+           const sortedRefs = Object.entries(insights.referrers).sort((a,b) => b[1]-a[1]).slice(0, 5);
+           refEl.innerHTML = sortedRefs.map(([r, c]) => `
+              <div style="display:flex; justify-content:space-between; padding:0.3rem 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+                <span style="opacity:0.7;">${r.length > 25 ? r.substring(0, 25)+'...' : r}</span>
+                <span style="color:var(--gold);">${c}</span>
+              </div>
+           `).join('') || 'No referrer data yet.';
+
+           // Render Devices
+           const devEl = document.getElementById('insightsDevices');
+           const totalDev = insights.devices.Mobile + insights.devices.Desktop || 1;
+           devEl.innerHTML = `
+             <div style="margin-bottom:0.8rem;">
+               <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:0.3rem;"><span>Mobile</span><span>${Math.round(insights.devices.Mobile/totalDev*100)}%</span></div>
+               <div style="height:6px; background:var(--card); border-radius:10px;"><div style="width:${insights.devices.Mobile/totalDev*100}%; height:100%; background:var(--gold); border-radius:10px;"></div></div>
+             </div>
+             <div>
+               <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:0.3rem;"><span>Desktop</span><span>${Math.round(insights.devices.Desktop/totalDev*100)}%</span></div>
+               <div style="height:6px; background:var(--card); border-radius:10px;"><div style="width:${insights.devices.Desktop/totalDev*100}%; height:100%; background:#2563eb; border-radius:10px;"></div></div>
+             </div>
+           `;
+
+           // Render Funnel
+           const funnelEl = document.getElementById('conversionFunnel');
+           const funnelData = [
+              { label: 'Total Page Views', val: insights.funnel.views, color: 'var(--gold)' },
+              { label: 'Added to Cart', val: insights.funnel.cart, color: '#f59e0b' },
+              { label: 'Captured Leads', val: insights.funnel.leads, color: '#10b981' }
+           ];
+           const maxFunnel = insights.funnel.views || 1;
+           funnelEl.innerHTML = funnelData.map(f => `
+              <div style="display:flex; align-items:center; gap:1rem;">
+                <div style="flex:1; height:32px; background:rgba(255,255,255,0.03); border-radius:4px; position:relative; overflow:hidden;">
+                   <div style="height:100%; background:${f.color}; width:${(f.val/maxFunnel*100) || 0}%; opacity:0.6;"></div>
+                   <div style="position:absolute; inset:0; display:flex; align-items:center; padding:0 1rem; justify-content:space-between; font-size:0.8rem;">
+                      <span>${f.label}</span>
+                      <strong>${f.val}</strong>
+                   </div>
+                </div>
+                <div style="width:60px; font-size:0.75rem; color:var(--muted);">${Math.round(f.val/maxFunnel*100)}%</div>
+              </div>
+           `).join('');
+
+           // Render Live Visitors List
+           const liveEl = document.getElementById('liveVisitorsList');
+           document.getElementById('liveVisitorsCount').textContent = `${activeNow} ONLINE`;
+           
+           const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+           const currentLiving = Object.entries(adminData.living_visitors || {})
+              .filter(([vid, v]) => v.lastSeen > fiveMinsAgo)
+              .sort((a,b) => b[1].lastSeen.localeCompare(a[1].lastSeen));
+
+           liveEl.innerHTML = currentLiving.map(([vid, v]) => {
+              // Cross-reference with Leads
+              const matchedLead = adminData.leads.find(l => l.visitorId === vid || l.visitorId === v.visitorId);
+              const displayName = matchedLead ? `<span style="color:#10b981;">Lead: ${matchedLead.name}</span>` : `Visitor ${vid.substring(0, 6)}`;
+              const displayContact = matchedLead ? `<div style="font-size:0.6rem; color:#10b981;"><i class="ph ph-whatsapp-logo"></i> ${matchedLead.whatsapp}</div>` : '';
+              
+              return `
+              <div style="background:var(--card); border:1px solid var(--border); border-radius:8px; padding:0.8rem; display:flex; flex-direction:column; gap:0.3rem; ${matchedLead ? 'border-color:#10b981; background:rgba(16,185,129,0.05);' : ''}">
+                 <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.75rem; color:var(--white); font-weight:600;">${displayName}</span>
+                    <span style="font-size:0.6rem; color:var(--muted);">${Math.round((Date.now() - new Date(v.lastSeen))/1000)}s ago</span>
+                 </div>
+                 ${displayContact}
+                 <div style="font-size:0.7rem; color:var(--gold); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${v.page || '/'}">
+                    <i class="ph ph-browser"></i> ${v.page || '/'}
+                 </div>
+                 <div style="font-size:0.6rem; color:var(--muted);">
+                    <i class="ph ph-device-mobile"></i> ${v.device || 'Unknown'}
+                 </div>
+              </div>
+              `;
+           }).join('') || '<p style="font-size:0.8rem; color:var(--muted); padding:1rem;">No one is browsing right now.</p>';
+        }
+
+        // Activity table
+        const parseOS = (ua) => {
+          if (!ua) return 'Unknown';
+          if (ua.includes('Win')) return 'Windows';
+          if (ua.includes('Mac')) return 'macOS';
+          if (ua.includes('Android')) return 'Android';
+          if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
+          if (ua.includes('Linux')) return 'Linux';
+          return 'Unknown';
+        };
+
+        document.querySelector('#activityTable tbody').innerHTML = (analytics.clicks || []).slice(-150).reverse().map(c => {
+          const dt = new Date(c.time || Date.now());
+          const deviceStr = c.device ? `${parseOS(c.device.ua)} (${c.device.screen})` : 'Legacy Traffic';
+          return `<tr>
+            <td style="font-weight:500;">${(c.element||'').slice(0,50)}</td>
+            <td>${c.page||''}</td>
+            <td style="color:var(--gold);font-size:0.8rem;">${deviceStr}</td>
+            <td style="font-size:0.85rem;color:var(--muted);">${dt.toLocaleDateString()} ${dt.toLocaleTimeString()}</td>
+          </tr>`;
+        }).join('');
+
+        // Leads (with new device fields)
+        const leads = adminData.leads || [];
+        document.getElementById('leadsContainer').innerHTML = leads.length === 0
+          ? '<p style="color:var(--muted);font-size:0.85rem;">No leads captured yet.</p>'
+          : leads.slice().reverse().map(l => {
+              const dt = new Date(l.time || Date.now());
+              const deviceStr = l.device ? `📱 ${parseOS(l.device.ua)} | ${l.device.screen}` : '';
+              return `
+                <div class="lead-item" style="border-left: 3px solid var(--gold); padding-left: 1rem; margin-bottom: 0.75rem; background: var(--card2); border-radius: 4px; padding-top: 0.5rem; padding-bottom: 0.5rem; padding-right: 0.5rem;">
+                  <div class="lead-info" style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                      <strong style="color:var(--white); font-size:1rem; display:block; margin-bottom:0.25rem;">${l.name || l.email}</strong>
+                      <span style="display:block; margin-bottom: 0.25rem;"><i class="ph ph-envelope-simple"></i> ${l.email || 'No email provided'}</span>
+                      <span style="display:block; margin-bottom: 0.25rem;"><i class="ph ph-whatsapp-logo"></i> ${l.whatsapp ? l.whatsapp : 'No number'}</span>
+                      <span style="display:block;"><i class="ph ph-map-pin"></i> ${l.location || 'Unknown Location'}</span>
+                    </div>
+                    <div style="text-align:right;">
+                      <span style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:0.25rem;"><i class="ph ph-calendar"></i> ${dt.toLocaleDateString()}</span>
+                      <span style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:0.25rem;"><i class="ph ph-clock"></i> ${dt.toLocaleTimeString()}</span>
+                      <span style="display:block; font-size:0.7rem; color:var(--gold);"><i class="ph ph-device-mobile"></i> ${deviceStr}</span>
+                    </div>
+                  </div>
+                </div>`;
+            }).join('');
+
+        renderVendors(adminData.vendors || []);
+        renderEngagementCenter();
+      }
+
+      function renderEngagementCenter() {
+         updateNotifDiagnostics();
+         const listEl = document.getElementById('engagementList');
+         if (!listEl) return;
+
+         const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+         const allVisitors = Object.entries(adminData.living_visitors || {});
+         const leads = adminData.leads || [];
+         
+         // 1. Filter
+         let filtered = allVisitors;
+         if (engagementFilter === 'unsubscribed') {
+            filtered = allVisitors.filter(([vid, v]) => {
+               const lead = leads.find(l => l.visitorId === vid);
+               return (lead && lead.unsubscribed) || v.notifStatus === 'denied';
+            });
+         }
+
+         // 2. Sort: Live (pulsed < 5 mins ago) followed by Recent (Last seen)
+         const sorted = filtered.sort((a, b) => {
+            const isALive = a[1].lastSeen > fiveMinsAgo;
+            const isBLive = b[1].lastSeen > fiveMinsAgo;
+            if (isALive && !isBLive) return -1;
+            if (!isALive && isBLive) return 1;
+            return b[1].lastSeen.localeCompare(a[1].lastSeen);
+         });
+
+         if (sorted.length === 0) {
+            listEl.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--muted);">No matching visitors found.</td></tr>';
+            return;
+         }
+
+         listEl.innerHTML = sorted.map(([vid, v]) => {
+            const isLive = v.lastSeen > fiveMinsAgo;
+            const lastSeenDate = new Date(v.lastSeen);
+            const timeStr = isLive ? `<span style="color:#10b981;">Active Now</span>` : lastSeenDate.toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+            
+            // Cross-reference with Leads
+            const matchedLead = leads.find(l => l.visitorId === vid);
+            const isBlocked = (matchedLead && matchedLead.unsubscribed) || v.notifStatus === 'denied';
+            const name = matchedLead ? matchedLead.name : `Visitor ${vid.substring(0, 8)}`;
+            
+            return `
+               <tr>
+                  <td>
+                     <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <span class="${isLive ? 'live-dot' : ''}" style="width:8px; height:8px; border-radius:50%; background:${isLive ? '#10b981' : 'var(--muted)'}; opacity:${isLive ? '1' : '0.6'};"></span>
+                        <div style="font-weight:600; color:var(--white);">${name}</div>
+                        ${isBlocked ? '<span class="status-badge blocked">BLOCKED</span>' : ''}
+                     </div>
+                  </td>
+                  <td>
+                     <div style="font-size:0.8rem; color:var(--text);">${v.page || '/'}</div>
+                     <div style="font-size:0.65rem; color:var(--muted);">${timeStr}</div>
+                  </td>
+                  <td style="font-size:0.75rem; color:var(--muted);"><i class="ph ph-device-mobile"></i> ${v.device || 'Unknown'}</td>
+                  <td style="text-align:right; display:flex; gap:0.4rem; justify-content:flex-end;">
+                      <button class="btn btn-sm" style="background:#3b82f6; color:white;" onclick="sendIndividualMessage('${vid}', '${matchedLead ? matchedLead.name : 'Visitor'}')">
+                         <i class="ph ph-chat-centered-text"></i> MESSAGE
+                      </button>
+                      <button class="btn btn-sm btn-outline" style="border-color:#3b82f6; color:#3b82f6;" onclick="testIndividualNotification('${vid}', '${matchedLead ? matchedLead.name : 'Visitor'}')">
+                         <i class="ph ph-test-tube"></i> TEST NOTIFY
+                      </button>
+                   </td>
+               </tr>
+            `;
+         }).join('');
+      }
+
+      window.sendIndividualMessage = async (vid, name) => {
+         const title = prompt(`Message Title for ${name}:`, "Special Offer Just For You!");
+         if (!title) return;
+         const body = prompt(`Message Body for ${name}:`, "Check out our newest Ruby Bow collection, we think you'll love it!");
+         if (!body) return;
+
+         try {
+            const { set, ref } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
+            await set(ref(firebaseDB.db, `user_messages/${vid}/latest`), {
+               title: title,
+               body: body,
+               time: new Date().toISOString()
+            });
+            alert(`Message sent to ${name}!`);
+         } catch (e) {
+            console.error(e);
+            alert('Failed to send message: ' + e.message);
+         }
+      };
+
+      window.testIndividualNotification = async (vid, name) => {
+         if(!confirm(`Send a test system notification to ${name}? This will check if their device receives Chrome push alerts.`)) return;
+         
+         try {
+            const { set, ref } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
+            await set(ref(firebaseDB.db, `user_messages/${vid}/latest`), {
+               title: "🔔 SYSTEM TEST SUCCESSFUL",
+               body: "If you are seeing this, your device is correctly receiving notifications from ADIS Fashion.",
+               time: new Date().toISOString()
+            });
+            alert(`Test notification triggered for ${name}. Check the target device.`);
+         } catch (e) {
+            console.error(e);
+            alert('Failed to send test: ' + e.message);
+         }
+      };
+
+      function renderAdminLanding() {
+        const grid = document.getElementById('adminLandingGrid');
+        if (!grid) return;
+        
+        let config = adminData.landingConfig;
+        if (!config || !config.heroMobile) {
+           // Default config if none in DB — Sync with existing images in /images/
+           config = {
+               heroMobile: './images/hero-banner.png',
+               heroDesktop: './images/hero-banner.png',
+               collection1: './images/claw-clip-gold.png',
+               collection2: './images/bow-clip-cobalt.png',
+               collection3: './images/pearl-pin-set.png',
+               collection4: './images/amber-claw.png'
+           };
+           adminData.landingConfig = config;
+        }
+
+        const keys = [
+            { id: 'heroDesktop', label: 'Desktop Banner', desc: 'Main wide banner for computers' },
+            { id: 'heroMobile', label: 'Mobile Banner', desc: 'Tall banner for phone screens' },
+            { id: 'collection1', label: 'Collection Item 1', desc: 'First spotlight image' },
+            { id: 'collection2', label: 'Collection Item 2', desc: 'Second spotlight image' },
+            { id: 'collection3', label: 'Collection Item 3', desc: 'Third spotlight image' },
+            { id: 'collection4', label: 'Collection Item 4', desc: 'Fourth spotlight image' }
+        ];
+
+        let html = `
+          <div style="background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:1.5rem; display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem;">
+        `;
+        
+        keys.forEach(k => {
+           html += `
+             <div style="background:var(--card); border:1px solid var(--gold-dim); border-radius:12px; padding:1.2rem; display:flex; flex-direction:column; gap:0.8rem; position:relative; overflow:hidden;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                   <div>
+                      <h4 style="color:var(--gold); font-size:0.9rem; margin-bottom:0.2rem;">${k.label}</h4>
+                      <p style="font-size:0.7rem; color:var(--muted);">${k.desc}</p>
+                   </div>
+                   <div style="font-size:1.2rem; color:var(--gold-dim);"><i class="ph ph-image"></i></div>
+                </div>
+
+                <div style="position:relative; width:100%; height:200px; border-radius:12px; overflow:hidden; border:2px solid var(--border); background:#111; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                   <img src="${config[k.id]}" id="l_preview_${k.id}" style="width:100%; height:100%; object-fit:cover; transition: transform 0.3s;">
+                   <div style="position:absolute; top:0.5rem; left:0.5rem; background:rgba(0,0,0,0.6); color:var(--gold); font-size:0.6rem; padding:0.2rem 0.5rem; border-radius:4px; border:1px solid var(--gold-dim); backdrop-filter:blur(4px);">CURRENT PREVIEW</div>
+                   <div style="position:absolute; inset:0; background:rgba(0,0,0,0.5); display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; transition:opacity 0.3s ease; backdrop-filter:blur(2px);" class="img-hover-overlay">
+                      <i class="ph ph-upload-simple" style="font-size:1.5rem; color:var(--gold); margin-bottom:0.5rem;"></i>
+                      <label for="l_file_${k.id}" style="cursor:pointer; background:var(--gold); color:var(--bg); padding:0.5rem 1rem; border-radius:100px; font-size:0.75rem; font-weight:700; box-shadow:0 4px 10px rgba(0,0,0,0.3);">UPDATE IMAGE</label>
+                   </div>
+                </div>
+
+                <input type="hidden" id="l_image_${k.id}" value="${config[k.id]}">
+                <input type="file" id="l_file_${k.id}" accept=".jpg,.jpeg" class="file-landing-upload" data-key="${k.id}" style="display:none;">
+                
+                <div id="l_upload_status_${k.id}" style="font-size:0.7rem; color:var(--gold); display:none; text-align:center;">Processing...</div>
+                
+                <button class="btn btn-primary btn-save-landing" data-key="${k.id}" style="font-size:0.7rem; padding:0.5rem; width:100%; margin-top:0.5rem; border-radius:8px;">SAVE CHANGES</button>
+             </div>
+           `;
+        });
+        
+        html += `</div>`;
+        grid.innerHTML = html;
+
+        // Add hover effect for image containers
+        grid.querySelectorAll('div[style*="height:200px"]').forEach(container => {
+           container.addEventListener('mouseenter', () => { 
+              container.querySelector('.img-hover-overlay').style.opacity = '1';
+              container.querySelector('img').style.transform = 'scale(1.05)';
+           });
+           container.addEventListener('mouseleave', () => { 
+              container.querySelector('.img-hover-overlay').style.opacity = '0';
+              container.querySelector('img').style.transform = 'scale(1)';
+           });
+        });
+
+        grid.querySelectorAll('.btn-save-landing').forEach(btn => {
+           btn.addEventListener('click', (e) => {
+               const k = e.target.dataset.key;
+               adminData.landingConfig[k] = document.getElementById(`l_image_${k}`).value;
+               syncLandingToFirebase();
+           });
+        });
+
+        grid.querySelectorAll('.file-landing-upload').forEach(input => {
+            input.addEventListener('change', async (e) => {
+                const k = e.target.dataset.key;
+                const file = e.target.files[0];
+                if (!file) return;
+                if (!file.name.toLowerCase().endsWith('.jpg') && !file.name.toLowerCase().endsWith('.jpeg')) {
+                    alert('Only .jpg or .jpeg images are allowed for landing banners.');
+                    return e.target.value = '';
+                }
+
+                const statusEl = document.getElementById(`l_upload_status_${k}`);
+                const previewEl = document.getElementById(`l_preview_${k}`);
+                const hiddenUrlEl = document.getElementById(`l_image_${k}`);
+                
+                statusEl.style.display = 'block';
+                statusEl.textContent = 'Compressing Image...';
+                statusEl.style.color = 'var(--gold)';
+
+                try {
+                    const base64Data = await compressImageToBase64(file, 1200); // Allow higher res for landing
+                    hiddenUrlEl.value = base64Data;
+                    previewEl.src = base64Data;
+                    
+                    statusEl.textContent = 'Ready! Click Save This Banner.';
+                    statusEl.style.color = '#10b981';
+                } catch (err) {
+                    console.error('Compression failed', err);
+                    statusEl.textContent = 'Compression Failed. Try again.';
+                    statusEl.style.color = '#ef4444';
+                }
+            });
+        });
+      }
+
+      function renderVendors(vendors) {
+        document.getElementById('vendorsContainer').innerHTML = vendors.length === 0
+          ? '<p style="color:var(--muted);font-size:0.85rem;">No vendor applications or B2B inquiries yet.</p>'
+          : vendors.slice().reverse().map(v => {
+            const isB2B = v.type === 'b2b';
+            const badge = isB2B ? '<span style="background:rgba(37,99,235,0.15);color:#2563eb;padding:0.2rem 0.5rem;border-radius:100px;font-size:0.6rem;font-weight:600;">B2B</span>' : '<span style="background:var(--gold-dim);color:var(--gold);padding:0.2rem 0.5rem;border-radius:100px;font-size:0.6rem;font-weight:600;">VENDOR</span>';
+            const name = v.businessName || v.company || 'N/A';
+            const contact = v.contactPerson || v.contact || '';
+            return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:0.5rem;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem;">
+                <strong style="color:var(--white);font-size:0.85rem;">${name}</strong>
+                ${badge}
+              </div>
+              <div style="font-size:0.75rem;color:var(--muted);line-height:1.6;">
+                ${contact ? 'Contact: ' + contact + '<br>' : ''}
+                Email: ${v.email || 'N/A'}<br>
+                Phone: ${v.phone || 'N/A'}<br>
+                ${v.location ? 'Location: ' + v.location + '<br>' : ''}
+                ${v.category ? 'Category: ' + v.category + '<br>' : ''}
+                ${v.orderVolume ? 'Volume: ' + v.orderVolume + '<br>' : ''}
+                ${v.message || v.requirements ? '<br><em>' + (v.message || v.requirements) + '</em>' : ''}
+              </div>
+              <div style="font-size:0.6rem;color:var(--muted);margin-top:0.3rem;">${new Date(v.time || Date.now()).toLocaleString()}</div>
+            </div>`;
+          }).join('');
+      }
+
+      function updateNotifDiagnostics() {
+         const permEl = document.getElementById('diagNotifPerm');
+         const swEl = document.getElementById('diagNotifSW');
+         const btnEl = document.getElementById('btnRequestNotif');
+         const iosEl = document.getElementById('iosPWAGuide');
+         
+         if(permEl) {
+            permEl.textContent = Notification.permission.toUpperCase();
+            permEl.style.color = Notification.permission === 'granted' ? '#10b981' : '#ef4444';
+            if(Notification.permission !== 'granted') btnEl.style.display = 'block';
+            else btnEl.style.display = 'none';
+         }
+
+         // iOS PWA Detection
+         if(iosEl) {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+            if (isIOS && !isStandalone) {
+               iosEl.style.display = 'block';
+            } else {
+               iosEl.style.display = 'none';
+            }
+         }
+         
+         if(swEl) {
+            if ('serviceWorker' in navigator) {
+               navigator.serviceWorker.getRegistration().then(reg => {
+                  if(reg) {
+                     swEl.textContent = 'ACTIVE';
+                     swEl.style.color = '#10b981';
+                  } else {
+                     swEl.textContent = 'MISSING';
+                     swEl.style.color = '#ef4444';
+                     // Try to re-register
+                     navigator.serviceWorker.register('./sw.js');
+                  }
+               });
+            } else {
+               swEl.textContent = 'UNSUPPORTED';
+               swEl.style.color = '#ef4444';
+            }
+         }
+      }
+
+      window.requestNotifPerm = () => {
+         Notification.requestPermission().then(perm => {
+            updateNotifDiagnostics();
+            if(perm === 'granted') alert('Notifications enabled! Try a TEST NOTIFY now.');
+         });
+      };
+
+      // INIT: Load dashboard if authenticated
+      if (sessionStorage.getItem('ADIS_admin_auth')) {
+         showAdmin();
+      }
+    </script>
+  </body>
+
+
+</html>

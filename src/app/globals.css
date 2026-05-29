@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #040404;
+  --color-foreground: #F5F5F5;
+  --color-brand: #FFE600;
+  --color-brand-dark: #D4BF00;
+  --color-section: #F5F5F5;
+  --color-dark-accent: #111111;
+  --color-admin-sidebar: #0f172a;
+  --color-admin-border: #e2e8f0;
+  --color-admin-green: #22c55e;
+  --color-admin-amber: #f59e0b;
+  --color-admin-indigo: #6366f1;
+  --font-sans: "Poppins", sans-serif;
+}
+
+* {
+  cursor: none !important;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: "Poppins", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }
+
+/* Selection color — brand yellow */
+::selection {
+  background: #FFE600;
+  color: #000000;
+}
+
+/* Hide scrollbar for carousels */
+.scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
+/* Glass card utility */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Yellow glow utility */
+.glow-yellow {
+  box-shadow: 0 0 20px rgba(255, 230, 0, 0.4), 0 0 40px rgba(255, 230, 0, 0.15);
+}
