@@ -177,7 +177,14 @@ export default function FirebaseProvider({ children }: { children: React.ReactNo
           clearTimeout(fallbackTimeout);
           const val = snapshot.val();
           if (!val) {
-            // No products in Firebase yet — keep mock data
+            // No products in Firebase yet — seed Firebase with mock data
+            import('firebase/database').then(({ set }) => {
+               set(productsRef, storeProductsRef.current);
+               const cats = Array.from(new Set(storeProductsRef.current.map(p => p.category))).filter(Boolean);
+               if (cats.length > 0) {
+                 set(ref(db, 'categories'), cats);
+               }
+            });
             setAppReady(true);
             return;
           }
@@ -208,7 +215,19 @@ export default function FirebaseProvider({ children }: { children: React.ReactNo
         const landingRef = ref(db, 'landingConfig');
         const unsubLanding = onValue(landingRef, (snapshot) => {
           const val = snapshot.val();
-          if (val) setLandingConfig(val);
+          if (val) {
+             setLandingConfig(val);
+          } else {
+             const defaultLanding = {
+               heroDesktop: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=1600&q=80',
+               heroMobile: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80',
+               collection1: '', collection2: '', collection3: '', collection4: ''
+             };
+             import('firebase/database').then(({ set }) => {
+                set(landingRef, defaultLanding);
+             });
+             setLandingConfig(defaultLanding);
+          }
         });
 
         unsubscribeRef.current = () => {
