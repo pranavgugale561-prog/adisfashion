@@ -4,7 +4,7 @@
 export const firebaseConfig = {
   apiKey: "AIzaSyA358G8v6GSaqdUemaME3-CKdqekxp9kcg",
   authDomain: "adiscreations.firebaseapp.com",
-  databaseURL: "https://ADIScreations-default-rtdb.firebaseio.com",
+  databaseURL: "https://adiscreations-default-rtdb.firebaseio.com",
   projectId: "ADIScreations",
   storageBucket: "adiscreations.firebasestorage.app",
   messagingSenderId: "593523996212",
@@ -16,11 +16,6 @@ let _db: any = null;
 let _dbAvailable: boolean | null = null; // null = unknown, true = ok, false = unavailable
 
 export async function getFirebaseDB() {
-  // Temporary: Firebase is not connected yet. Return null to force LocalStorage fallback.
-  _dbAvailable = false;
-  return null;
-
-  /*
   if (_dbAvailable === false) return null;
   if (_db) return _db;
 
@@ -43,7 +38,6 @@ export async function getFirebaseDB() {
     _dbAvailable = false;
     return null;
   }
-  */
 }
 
 /* ──────────────────────────────────────────────────────────

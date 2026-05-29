@@ -168,21 +168,19 @@ export default function ChatWidget() {
     <>
       {/* Floating Action Buttons */}
       <div className="fixed bottom-6 right-6 flex flex-col gap-4 z-50">
-        {!isChatOpen && (
-          <motion.button
-            className="w-14 h-14 bg-white border border-gray-200 text-black rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform relative"
-            onClick={() => setCartOpen(true)}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <ShoppingBag size={24} />
-            {cart.length > 0 && (
-              <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">
-                {cart.length}
-              </span>
-            )}
-          </motion.button>
-        )}
+        <motion.button
+          className="w-14 h-14 bg-white border border-gray-200 text-black rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform relative"
+          onClick={() => setCartOpen(true)}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <ShoppingBag size={24} />
+          {cart.length > 0 && (
+            <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">
+              {cart.length}
+            </span>
+          )}
+        </motion.button>
 
         <motion.button
           className="w-14 h-14 bg-black text-[#FFE600] rounded-full flex items-center justify-center shadow-2xl hover:scale-105 transition-transform"
