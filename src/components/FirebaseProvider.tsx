@@ -127,11 +127,12 @@ export default function FirebaseProvider({ children }: { children: React.ReactNo
                 // Actually, the site uses defaults in Hero section if it's null.
                 // Let's seed a basic landing config if missing so the admin panel has something to show.
                 const defaultLanding = {
-                   heroBanner: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=1600&q=80',
-                   heroTitle: 'Step Into the New Era',
-                   heroSubtitle: 'Discover the latest drop from ADIS Original',
-                   heroCtaText: 'Shop the Collection',
-                   heroCtaLink: '#categories'
+                   heroDesktop: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=1600&q=80',
+                   heroMobile: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80',
+                   collection1: '',
+                   collection2: '',
+                   collection3: '',
+                   collection4: ''
                 };
                 localStorage.setItem('ADIS_landingConfig', JSON.stringify(defaultLanding));
                 setLandingConfig(defaultLanding);
