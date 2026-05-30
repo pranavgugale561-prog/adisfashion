@@ -15,7 +15,22 @@ function normaliseProduct(raw: any, fallback: Product | undefined): Product | nu
 
   // If the product already has the frontend's `prices` object — it's already rich
   if (raw.prices && typeof raw.prices === 'object') {
-    return raw as Product;
+    return {
+      ...raw,
+      badges: raw.badges ?? fallback?.badges ?? [],
+      images: raw.images ?? fallback?.images ?? ['https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80'],
+      variants: raw.variants ?? fallback?.variants ?? [
+        { size: 'S', stock: 10 },
+        { size: 'M', stock: 20 },
+        { size: 'L', stock: 20 },
+        { size: 'XL', stock: 10 },
+      ],
+      details: raw.details ?? fallback?.details ?? {
+        material: raw.material ?? '100% Cotton',
+        gsm: raw.gsm ?? '220 GSM',
+        wash_care: raw.wash_care ?? 'Machine wash cold',
+      },
+    } as Product;
   }
 
   // ── Legacy "simple" admin product ──────────────────────────────────────

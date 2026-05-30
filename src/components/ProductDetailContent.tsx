@@ -28,7 +28,7 @@ export default function ProductDetailContent({ product, backHref = '/men', backL
 
   const cartCount = cart.reduce((a, c) => a + c.quantity, 0);
   const isWishlisted = wishlist.includes(product.id);
-  const variant = product.variants.find((v) => v.size === selectedSize);
+  const variant = (product.variants || []).find((v) => v.size === selectedSize);
   const effectivePrice = isMember ? product.prices.member : product.prices.sale;
 
   const handleAddToCart = () => {
@@ -64,7 +64,7 @@ export default function ProductDetailContent({ product, backHref = '/men', backL
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
               <div className="flex gap-3">
                 <div className="hidden sm:flex flex-col gap-2">
-                  {product.images.map((img, i) => (
+                  {(product.images || []).map((img, i) => (
                     <button
                       key={i}
                       onClick={() => setSelectedImage(i)}
@@ -87,7 +87,7 @@ export default function ProductDetailContent({ product, backHref = '/men', backL
                   >
                     <img src={product.images[selectedImage]} alt={product.title} className="absolute inset-0 w-full h-full object-cover" />
                     <div className="absolute top-4 left-4 flex flex-col gap-1.5">
-                      {product.badges.map((badge) => (
+                      {(product.badges || []).map((badge) => (
                         <span
                           key={badge}
                           className={cn(
@@ -130,7 +130,7 @@ export default function ProductDetailContent({ product, backHref = '/men', backL
                     </span>
                   )}
                 </div>
-                <SizeGrid variants={product.variants} selectedSize={selectedSize} onSelect={(size) => setSelectedSize(size)} />
+                <SizeGrid variants={product.variants || []} selectedSize={selectedSize} onSelect={(size) => setSelectedSize(size)} />
               </div>
 
               <div className="mt-6 space-y-3">

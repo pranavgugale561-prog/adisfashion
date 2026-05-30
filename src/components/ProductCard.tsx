@@ -24,7 +24,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const [showSizes, setShowSizes] = useState(false);
   const { wishlist, toggleWishlist, addToCart, setCartOpen, isMember } = useStore();
   const isWishlisted = wishlist.includes(product.id);
-  const totalStock = product.variants.reduce((a, v) => a + v.stock, 0);
+  const totalStock = (product.variants || []).reduce((a, v) => a + v.stock, 0);
   const memberPrice = isMember;
   const href = categoryHref(product);
   const impressions = Math.floor(product.id.length * 423.5) % 15000 + 3000;
@@ -46,7 +46,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-            {product.badges.map((badge) => (
+            {(product.badges || []).map((badge) => (
               <span
                 key={badge}
                 className={cn(
@@ -118,7 +118,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
               </button>
               <p className="text-white text-xs font-bold uppercase tracking-widest mb-4">Select Size</p>
               <div className="flex flex-wrap justify-center gap-2">
-                {product.variants.map((v) => (
+                {(product.variants || []).map((v) => (
                   <button
                     key={v.size}
                     disabled={v.stock === 0}
