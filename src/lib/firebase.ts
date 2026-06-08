@@ -1,14 +1,13 @@
 'use client';
 
 export const firebaseConfig = {
-  apiKey: "AIzaSyBKRPzK7uW0D8L3q1oefUUAnbpOaz4AVjA",
-  authDomain: "adis-fashion.firebaseapp.com",
-  databaseURL: "https://adis-fashion-default-rtdb.firebaseio.com",
-  projectId: "adis-fashion",
-  storageBucket: "adis-fashion.firebasestorage.app",
-  messagingSenderId: "221444414041",
-  appId: "1:221444414041:web:ec06cb1f70ceef9a6eaf48",
-  measurementId: "G-08BL76LX5W"
+  apiKey: "AIzaSyBk9_XRdWKSiG_-4iRmsctUTtorupxnUqM",
+  authDomain: "adis-fashion-dc509.firebaseapp.com",
+  projectId: "adis-fashion-dc509",
+  storageBucket: "adis-fashion-dc509.firebasestorage.app",
+  messagingSenderId: "11769545731",
+  appId: "1:11769545731:web:99ae444c2ea487d3dcba36",
+  measurementId: "G-JDF2GBHMQ2"
 };
 
 let _app: any = null;
