@@ -3454,6 +3454,24 @@
          }
       }
 
+      
+      window.restoreLocalUpdates = function() {
+          if (confirm("This will load your browser's local unsaved updates and sync them to the Cloud. Do you want to proceed?")) {
+              adminData.products = JSON.parse(localStorage.getItem('ADIS_products') || '[]');
+              adminData.categories = JSON.parse(localStorage.getItem('ADIS_categories') || '["cap", "shoes", "jeans", "tshirts", "watches", "sando", "shirts", "shorts", "sports", "jacket"]');
+              adminData.landingConfig = JSON.parse(localStorage.getItem('ADIS_landingConfig') || 'null');
+              adminData.feeds = JSON.parse(localStorage.getItem('ADIS_feeds') || '[]');
+              import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js').then(({ set, ref }) => {
+                 set(ref(firebaseDB.db, 'products'), adminData.products);
+                 if(adminData.landingConfig) set(ref(firebaseDB.db, 'landingConfig'), adminData.landingConfig);
+                 set(ref(firebaseDB.db, 'categories'), adminData.categories);
+                 set(ref(firebaseDB.db, 'feeds'), adminData.feeds);
+                 alert('Lost updates successfully recovered and synced to the cloud!');
+                 location.reload();
+              });
+          }
+      };
+
       // Initialize dropdowns after Firebase loads
       const originalShowAdmin = showAdmin;
       showAdmin = async function() {
