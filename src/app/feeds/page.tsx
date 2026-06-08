@@ -24,6 +24,8 @@ const STATIC_FEEDS = [
 
 export default function FeedsPage() {
   const [feeds, setFeeds] = useState<any[]>(STATIC_FEEDS);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 6;
 
   useEffect(() => {
     // Load or process Instagram's embed.js
@@ -57,6 +59,7 @@ export default function FeedsPage() {
                    date: new Date(f.createdAt || Date.now()).toLocaleDateString()
                }));
                setFeeds(formatted);
+               setCurrentPage(1);
                
                // Reprocess embeds after state update
                setTimeout(() => {
@@ -97,7 +100,7 @@ export default function FeedsPage() {
 
           {/* Grid Container */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max items-start">
-            {feeds.map((feed, idx) => (
+            {feeds.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((feed, idx) => (
               <motion.div
                 key={feed.id}
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -153,6 +156,26 @@ export default function FeedsPage() {
               </motion.div>
             ))}
           </div>
+
+          {/* Pagination */}
+          {feeds.length > ITEMS_PER_PAGE && (
+            <div className="flex justify-center items-center mt-12 gap-2">
+              {Array.from({ length: Math.ceil(feeds.length / ITEMS_PER_PAGE) }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-10 h-10 rounded-full font-bold flex items-center justify-center transition-all duration-300 ${
+                    currentPage === i + 1 
+                      ? 'bg-[#FFE600] text-black scale-110' 
+                      : 'bg-white/10 text-white hover:bg-white/20'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+          )}
+
 
         </div>
       </main>

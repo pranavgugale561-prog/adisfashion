@@ -193,11 +193,15 @@ export default function FirebaseProvider({ children }: { children: React.ReactNo
           const val = snapshot.val();
           if (!val) {
             // No products in Firebase yet — seed Firebase with mock data
+            // But also load mock data into state so the app doesn't stay empty
+            setFirebaseProducts(storeProductsRef.current);
             import('firebase/database').then(({ set }) => {
-               set(productsRef, storeProductsRef.current);
+               set(productsRef, storeProductsRef.current).catch(err => {
+                 console.warn('[Firebase] Seed failed (rules might be private). Using local mock data.');
+               });
                const cats = Array.from(new Set(storeProductsRef.current.map(p => p.category))).filter(Boolean);
                if (cats.length > 0) {
-                 set(ref(db, 'categories'), cats);
+                 set(ref(db, 'categories'), cats).catch(() => {});
                }
             });
             setAppReady(true);
