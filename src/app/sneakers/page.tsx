@@ -7,6 +7,8 @@ import ProductCard from '@/components/ProductCard';
 import { ShoppingBag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useStore } from '@/store/useStore';
+import { convertGDriveUrl, parseImageLinks } from '@/utils/drive';
+import BannerCarousel from '@/components/BannerCarousel';
 
 const SNEAKERS_PRODUCTS = [
   { id: 'snk-air-white', title: 'ADIS Air Classic White', category: 'Sneakers', fit_type: 'Regular', fandom_tag: 'Originals', badges: ['NEW', 'BESTSELLER'] as string[], prices: { base: 3999, sale: 2999, member: 2499 }, images: ['https://picsum.photos/seed/snk1/800/1067', 'https://picsum.photos/seed/snk1b/800/1067', 'https://picsum.photos/seed/snk1c/800/1067'], variants: [{ size: 'S', stock: 5 }, { size: 'M', stock: 12 }, { size: 'L', stock: 18 }, { size: 'XL', stock: 8 }, { size: 'XXL', stock: 3 }], details: { material: 'Leather Upper, Rubber Sole', gsm: 'N/A', wash_care: 'Wipe clean with damp cloth' } },
@@ -21,8 +23,10 @@ const SNEAKERS_PRODUCTS = [
 
 export default function SneakersPage() {
   const [cartOpen, setCartOpen] = useState(false);
-  const cart = useStore((s) => s.cart);
+  const { cart, landingConfig } = useStore();
   const cartCount = cart.reduce((a, c) => a + c.quantity, 0);
+  
+  const sneakersBanner = landingConfig?.catBanner_Sneakers || landingConfig?.sneakers;
 
   return (
     <>
@@ -32,7 +36,9 @@ export default function SneakersPage() {
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-[0.15em]">Sneakers</h1>
-              <p className="text-gray-400 text-sm mt-1 font-medium">Fresh kicks & collab drops — {SNEAKERS_PRODUCTS.length} styles</p>
+              <p className="text-gray-400 text-sm mt-1 font-medium">
+                {landingConfig?.catPageSubtitle_Sneakers || 'Fresh kicks & collab drops'} — {SNEAKERS_PRODUCTS.length} style{SNEAKERS_PRODUCTS.length !== 1 && 's'}
+              </p>
             </div>
             <button onClick={() => setCartOpen(true)} className="relative p-2 hover:text-[#8B7700] transition-colors">
               <ShoppingBag className="w-5 h-5" />
@@ -41,16 +47,13 @@ export default function SneakersPage() {
           </motion.div>
 
           {/* Hero banner */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="rounded-2xl overflow-hidden mb-8 h-48 sm:h-64 relative">
-            <img src="https://picsum.photos/seed/sneakers-hero/1440/400" alt="Sneakers" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent flex items-center px-8">
-              <div>
-                <p className="text-[#FFE600] font-bold text-xs uppercase tracking-widest mb-1">Drops Every Friday</p>
-                <h2 className="text-white font-black text-2xl sm:text-3xl uppercase">Step Up. Stand Out.</h2>
-                <p className="text-white/60 text-sm mt-1">Exclusive kicks. Limited drops. Only at ADIS.</p>
-              </div>
-            </div>
-          </motion.div>
+          <BannerCarousel
+            images={parseImageLinks(sneakersBanner)}
+            fallbackImage="https://picsum.photos/seed/sneakers-hero/1440/400"
+            subtitle={landingConfig?.catBannerSubtitle_Sneakers || 'Drops Every Friday'}
+            title={landingConfig?.catBannerTitle_Sneakers || 'Step Up. Stand Out.'}
+            description={landingConfig?.catBannerDesc_Sneakers || 'Exclusive kicks. Limited drops. Only at ADIS.'}
+          />
 
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
             {SNEAKERS_PRODUCTS.map((product, i) => (

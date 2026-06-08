@@ -3,10 +3,16 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useStore } from '@/store/useStore';
+import { convertGDriveUrl, parseImageLinks } from '@/utils/drive';
+
+import BannerCarousel from '@/components/BannerCarousel';
 
 export default function TrendingBanner() {
   const { landingConfig } = useStore();
-  const imageSrc = landingConfig?.collection4 || "/images/sneaker_banner_1779138412678.png";
+  
+  const rawLinks = landingConfig?.latestDrop || landingConfig?.collection4 || "https://drive.google.com/thumbnail?id=1bSy7yII0kjuJpK-vw9q2oYJ9oPbJsTu0&sz=s3000";
+  const images = parseImageLinks(rawLinks);
+
   return (
     <section className="py-12 sm:py-16 bg-black/50 relative z-10 backdrop-blur-sm">
       <div className="w-full mx-auto">
@@ -24,22 +30,19 @@ export default function TrendingBanner() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="w-full relative"
+          className="w-full relative group"
         >
-          <Link href="/sneakers" className="block w-full relative overflow-hidden group bg-[#0a0a0a]">
+          <Link href="/sneakers" className="block w-full relative overflow-hidden bg-[#0a0a0a]">
             {/* Absolute overlay for "Shop Now" */}
-            <div className="absolute inset-0 z-20 flex flex-col items-center justify-end pb-12 sm:pb-24 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none">
-              <span className="text-[#FFE600] border-2 border-[#FFE600] px-8 py-3 text-sm font-bold tracking-[0.2em] uppercase backdrop-blur-md hover:bg-[#FFE600] hover:text-black transition-colors">
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-end pb-12 sm:pb-24 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none">
+              <span className="text-[#FFE600] border-2 border-[#FFE600] px-8 py-3 text-sm font-bold tracking-[0.2em] uppercase backdrop-blur-md hover:bg-[#FFE600] hover:text-black transition-colors pointer-events-auto">
                 Explore Collection
               </span>
             </div>
             
-            <motion.img
-              whileHover={{ scale: 1.03 }}
-              transition={{ duration: 1.2, ease: "easeOut" }}
-              src={imageSrc}
-              alt="Premium Sneaker Drops"
-              className="w-full object-cover min-h-[40vh] sm:h-[60vh] lg:h-[75vh]"
+            <BannerCarousel 
+              images={images} 
+              className="w-full min-h-[40vh] sm:h-[60vh] lg:h-[75vh] relative" 
             />
           </Link>
         </motion.div>

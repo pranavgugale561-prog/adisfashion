@@ -4,48 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Flame, Zap, Footprints } from 'lucide-react';
 import { useStore } from '@/store/useStore';
-
-const categories = [
-  {
-    title: 'Men',
-    subtitle: 'Fandom Collection',
-    tag: 'New Drops',
-    tagIcon: Flame,
-    image: '/images/category_shirts_1779127890248.png',
-    href: '/#men',
-    anchor: 'men',
-    accent: '#FFE600',
-    count: '120+ Styles',
-    span: 'col-span-2 row-span-2', // large card — left
-    textSize: 'text-3xl sm:text-4xl',
-  },
-  {
-    title: 'Daily Wear',
-    subtitle: 'Minimalist Essentials',
-    tag: 'Everyday',
-    tagIcon: Zap,
-    image: '/images/product_tshirt_1_1779127872398.png',
-    href: '/#daily-wear',
-    anchor: 'daily-wear',
-    accent: '#FFE600',
-    count: '80+ Styles',
-    span: 'col-span-1 row-span-1',
-    textSize: 'text-xl sm:text-2xl',
-  },
-  {
-    title: 'Sneakers',
-    subtitle: 'Step Up Your Drip',
-    tag: 'Limited',
-    tagIcon: Footprints,
-    image: '/images/category_jeans_1779127909257.png',
-    href: '/#sneakers',
-    anchor: 'sneakers',
-    accent: '#FFE600',
-    count: '40+ Kicks',
-    span: 'col-span-1 row-span-1',
-    textSize: 'text-xl sm:text-2xl',
-  },
-];
+import { convertGDriveUrl } from '@/utils/drive';
 
 function scrollToSection(id: string) {
   const el = document.getElementById(id);
@@ -53,14 +12,49 @@ function scrollToSection(id: string) {
 }
 
 export default function CategoriesGrid() {
-  const { landingConfig } = useStore();
+  const { landingConfig, products } = useStore();
   
-  const displayCategories = categories.map((cat, i) => {
-    if (i === 0 && landingConfig?.collection1) return { ...cat, image: landingConfig.collection1 };
-    if (i === 1 && landingConfig?.collection2) return { ...cat, image: landingConfig.collection2 };
-    if (i === 2 && landingConfig?.collection3) return { ...cat, image: landingConfig.collection3 };
-    return cat;
+  // Derive unique categories from products
+  const uniqueCategories = Array.from(new Set(products.map(p => p.category))).filter(Boolean);
+
+  const displayCategories = uniqueCategories.map((cat, index) => {
+    const id = cat.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const count = products.filter(p => p.category === cat).length;
+    
+    // Check if admin has set a custom image for this category grid
+    const customImage = landingConfig ? landingConfig[`catGrid_${cat}`] : null;
+    
+    // Provide some sensible fallbacks for common categories
+    let fallbackImage = `https://picsum.photos/seed/${id}/800/800`;
+    if (cat === 'Men') fallbackImage = '/images/category_shirts_1779127890248.png';
+    if (cat === 'Daily Wear') fallbackImage = '/images/product_tshirt_1_1779127872398.png';
+    if (cat === 'Sneakers') fallbackImage = '/images/category_jeans_1779127909257.png';
+
+    const image = customImage ? convertGDriveUrl(customImage) : fallbackImage;
+
+    const customSubtitle = landingConfig ? landingConfig[`catSubtitle_${cat}`] : null;
+    const customTag = landingConfig ? landingConfig[`catTag_${cat}`] : null;
+
+    // Feature the first category if there are at least 3 categories
+    const isFeatured = index === 0 && uniqueCategories.length >= 3;
+
+    return {
+      id,
+      title: cat,
+      subtitle: customSubtitle || (isFeatured ? 'Featured Collection' : 'Explore Category'),
+      tag: customTag || (isFeatured ? 'Hot Drops' : 'Trending'),
+      tagIcon: isFeatured ? Flame : Zap,
+      image: image as string,
+      href: `/#section-${id}`,
+      anchor: `section-${id}`,
+      accent: '#FFE600',
+      count: `${count}+ Styles`,
+      span: isFeatured ? 'col-span-2 row-span-2' : 'col-span-1 row-span-1',
+      textSize: isFeatured ? 'text-3xl sm:text-4xl' : 'text-xl sm:text-2xl',
+    };
   });
+
+  if (displayCategories.length === 0) return null;
 
   return (
     <section className="py-16 sm:py-24 relative z-10 overflow-hidden">
@@ -106,7 +100,7 @@ export default function CategoriesGrid() {
           whileInView="show"
           viewport={{ once: true, margin: '-80px' }}
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12 } } }}
-          className="grid grid-cols-3 grid-rows-2 gap-3 sm:gap-4 h-[480px] sm:h-[560px]"
+          className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 auto-rows-[200px] sm:auto-rows-[270px]"
         >
           {displayCategories.map((cat, i) => (
             <motion.div
@@ -134,6 +128,7 @@ export default function CategoriesGrid() {
                   transition={{ duration: 0.6, ease: 'easeOut' }}
                 >
                   <img
+                    referrerPolicy="no-referrer"
                     src={cat.image}
                     alt={cat.title}
                     className="w-full h-full object-cover"

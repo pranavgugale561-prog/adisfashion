@@ -7,6 +7,8 @@ import ProductCard from '@/components/ProductCard';
 import { ShoppingBag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useStore } from '@/store/useStore';
+import { convertGDriveUrl, parseImageLinks } from '@/utils/drive';
+import BannerCarousel from '@/components/BannerCarousel';
 
 const DAILY_WEAR_PRODUCTS = [
   { id: 'dw-classic-white', title: 'Classic White Essential Tee', category: 'Daily Wear', fit_type: 'Regular', fandom_tag: 'Essentials', badges: ['NEW'] as string[], prices: { base: 899, sale: 599, member: 499 }, images: ['https://picsum.photos/seed/dw1/800/1067', 'https://picsum.photos/seed/dw1b/800/1067', 'https://picsum.photos/seed/dw1c/800/1067'], variants: [{ size: 'S', stock: 30 }, { size: 'M', stock: 50 }, { size: 'L', stock: 45 }, { size: 'XL', stock: 20 }, { size: 'XXL', stock: 10 }], details: { material: '100% Cotton', gsm: '180 GSM', wash_care: 'Machine wash cold' } },
@@ -21,8 +23,10 @@ const DAILY_WEAR_PRODUCTS = [
 
 export default function DailyWearPage() {
   const [cartOpen, setCartOpen] = useState(false);
-  const cart = useStore((s) => s.cart);
+  const { cart, landingConfig } = useStore();
   const cartCount = cart.reduce((a, c) => a + c.quantity, 0);
+  
+  const dailyWearBanner = landingConfig?.['catBanner_Daily Wear'] || landingConfig?.dailyWear;
 
   return (
     <>
@@ -32,7 +36,9 @@ export default function DailyWearPage() {
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-[0.15em]">Daily Wear</h1>
-              <p className="text-gray-400 text-sm mt-1 font-medium">Everyday essentials & streetwear — {DAILY_WEAR_PRODUCTS.length} styles</p>
+              <p className="text-gray-400 text-sm mt-1 font-medium">
+                {landingConfig?.['catPageSubtitle_Daily Wear'] || 'Everyday essentials & streetwear'} — {DAILY_WEAR_PRODUCTS.length} styles
+              </p>
             </div>
             <button onClick={() => setCartOpen(true)} className="relative p-2 hover:text-[#8B7700] transition-colors">
               <ShoppingBag className="w-5 h-5" />
@@ -41,16 +47,13 @@ export default function DailyWearPage() {
           </motion.div>
 
           {/* Hero banner */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="rounded-2xl overflow-hidden mb-8 h-48 sm:h-64 relative">
-            <img src="https://picsum.photos/seed/dailywear-hero/1440/400" alt="Daily Wear" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent flex items-center px-8">
-              <div>
-                <p className="text-[#FFE600] font-bold text-xs uppercase tracking-widest mb-1">New Collection</p>
-                <h2 className="text-white font-black text-2xl sm:text-3xl uppercase">Everyday Elevated</h2>
-                <p className="text-white/60 text-sm mt-1">Comfort meets style, every single day</p>
-              </div>
-            </div>
-          </motion.div>
+          <BannerCarousel
+            images={parseImageLinks(dailyWearBanner)}
+            fallbackImage="https://picsum.photos/seed/dailywear-hero/1440/400"
+            subtitle={landingConfig?.['catBannerSubtitle_Daily Wear'] || 'New Collection'}
+            title={landingConfig?.['catBannerTitle_Daily Wear'] || 'Everyday Elevated'}
+            description={landingConfig?.['catBannerDesc_Daily Wear'] || 'Comfort meets style, every single day'}
+          />
 
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
             {DAILY_WEAR_PRODUCTS.map((product, i) => (

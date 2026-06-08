@@ -9,6 +9,7 @@ export interface Lead {
   email: string;
   phone: string;
   createdAt: string;
+  visitorId?: string;
 }
 
 const MOCK_PRODUCTS: Product[] = [
@@ -255,6 +256,13 @@ export interface LandingConfig {
   collection2?: string;
   collection3?: string;
   collection4?: string;
+  latestDrop?: string;
+  dailyWear?: string;
+  sneakers?: string;
+  bestStore?: string;
+  promoBanner1?: string;
+  promoBanner2?: string;
+  [key: string]: any;
 }
 
 export interface StoreState {
@@ -294,6 +302,10 @@ export interface StoreState {
   setIsChatOpen: (open: boolean) => void;
   lastViewedProduct: string | null;
   setLastViewedProduct: (id: string | null) => void;
+
+  // Loader state
+  loaderFinished: boolean;
+  setLoaderFinished: (finished: boolean) => void;
 }
 
 const defaultFilters: FilterState = {
@@ -315,6 +327,8 @@ export const useStore = create<StoreState>()(
       appReady: false,
       currentUser: null,
       landingConfig: null,
+      loaderFinished: false,
+      setLoaderFinished: (finished) => set({ loaderFinished: finished }),
       setAppReady: (ready) => set({ appReady: ready }),
       // Called by FirebaseProvider when Firebase has products — replaces mock data
       setFirebaseProducts: (products) => set({ products }),

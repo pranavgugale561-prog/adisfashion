@@ -42,9 +42,11 @@ html { scroll-behavior: smooth; }
   color: #000000;
 }
 
-/* Hide scrollbar for carousels */
+/* Hide scrollbar for carousels + chat product cards */
 .scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
 .scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
 
 /* Glass card utility */
 .glass {
@@ -57,4 +59,38 @@ html { scroll-behavior: smooth; }
 /* Yellow glow utility */
 .glow-yellow {
   box-shadow: 0 0 20px rgba(255, 230, 0, 0.4), 0 0 40px rgba(255, 230, 0, 0.15);
+}
+
+/* Prevent iOS zoom on chat input focus */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="password"],
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Range input styling for music player */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255,255,255,0.2);
+  border-radius: 99px;
+  height: 3px;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  background: #FFE600;
+  border-radius: 50%;
+  cursor: pointer;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  background: #FFE600;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
 }

@@ -9,12 +9,16 @@ import ProductCard from '@/components/ProductCard';
 import { useStore } from '@/store/useStore';
 import { ShoppingBag } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { convertGDriveUrl, parseImageLinks } from '@/utils/drive';
+import BannerCarousel from '@/components/BannerCarousel';
 
 export default function MenPage() {
-  const { products, filters } = useStore();
+  const { products, filters, landingConfig } = useStore();
   const [cartOpen, setCartOpen] = useState(false);
   const cart = useStore((s) => s.cart);
   const cartCount = cart.reduce((a, c) => a + c.quantity, 0);
+  
+  const menBanner = landingConfig?.catBanner_Men || landingConfig?.men || landingConfig?.collection1;
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -53,7 +57,7 @@ export default function MenPage() {
                 Men
               </h1>
               <p className="text-gray-400 text-sm mt-1 font-medium">
-                {filtered.length} product{filtered.length !== 1 && 's'} found
+                {landingConfig?.catPageSubtitle_Men || ''} {landingConfig?.catPageSubtitle_Men ? '— ' : ''} {filtered.length} product{filtered.length !== 1 && 's'} found
               </p>
             </div>
             <button
@@ -68,6 +72,15 @@ export default function MenPage() {
               )}
             </button>
           </motion.div>
+
+          {/* Hero banner */}
+          <BannerCarousel
+            images={parseImageLinks(menBanner)}
+            fallbackImage="/images/category_shirts_1779127890248.png"
+            subtitle={landingConfig?.catBannerSubtitle_Men || 'Premium Apparel'}
+            title={landingConfig?.catBannerTitle_Men || "The Men's Edit"}
+            description={landingConfig?.catBannerDesc_Men || 'Elevated essentials and bold statement pieces.'}
+          />
 
           <div className="flex gap-8">
             <FilterSidebar />

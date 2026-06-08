@@ -19,10 +19,26 @@ export default function LeadCatcher() {
     return () => clearTimeout(t);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.email) return;
-    addLead({ ...form, createdAt: new Date().toISOString() });
+    const visitorId = localStorage.getItem('ADIS_visitorId') || '';
+    const newLead = { ...form, visitorId, createdAt: new Date().toISOString() };
+    addLead(newLead);
+    
+    // push to firebase
+    try {
+      const { getFirebaseDB } = await import('@/lib/firebase');
+      const db = await getFirebaseDB();
+      if (db) {
+        const { ref, set } = await import('firebase/database');
+        const id = visitorId || `lead_${Date.now()}`;
+        await set(ref(db, `leads/${id}`), newLead);
+      }
+    } catch (err) {
+      console.error('Failed to sync lead:', err);
+    }
+    
     sessionStorage.setItem('adis-lead-seen', '1');
     setSubmitted(true);
     setTimeout(() => setVisible(false), 3000);

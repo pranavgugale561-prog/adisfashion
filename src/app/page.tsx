@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ProductCard from '@/components/ProductCard';
 import { Zap, RefreshCw, Truck, ShieldCheck, Users, Award, Globe, Heart } from 'lucide-react';
 import { useStore } from '@/store/useStore';
+import { convertGDriveUrl } from '@/utils/drive';
 
 // ── Preview products (same IDs as store, used for display) ──────────────────
 const DAILY_WEAR_PREVIEW = [
@@ -70,7 +71,11 @@ function SectionHeader({ title, href, label }: { title: string; href: string; la
 }
 
 export default function Home() {
-  const { appReady, cartOpen, setCartOpen } = useStore();
+  const { appReady, cartOpen, setCartOpen, landingConfig, products } = useStore();
+
+  const uniqueCategories = products && products.length > 0 
+    ? Array.from(new Set(products.map(p => p.category))).filter(Boolean)
+    : ['Men', 'Daily Wear', 'Sneakers'];
 
   useEffect(() => {
     // Start page from top when it's ready
@@ -101,73 +106,71 @@ export default function Home() {
         {/* ── Categories ── */}
         <CategoriesGrid />
 
-        {/* ══ MEN — New Arrivals ══════════════════════════════════════ */}
-        <section id="men" className="scroll-mt-20">
-          <div className="bg-black/50 backdrop-blur-sm">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-4">
-              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                className="flex items-end justify-between mb-4">
-                <div>
-                  <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-[0.15em] text-white">Men — New Arrivals</h2>
-                  <div className="h-0.5 w-12 bg-[#FFE600] mt-2 rounded-full" />
+        {/* ══ DYNAMIC CATEGORY SECTIONS ══════════════════════════════════ */}
+        {uniqueCategories.map((cat, idx) => {
+          const id = cat.toLowerCase().replace(/[^a-z0-9]/g, '-');
+          const catProducts = products && products.length > 0
+            ? products.filter(p => p.category === cat).slice(0, 4)
+            : (cat === 'Daily Wear' ? DAILY_WEAR_PREVIEW : cat === 'Sneakers' ? SNEAKERS_PREVIEW : DAILY_WEAR_PREVIEW);
+
+          const customBanner = landingConfig ? landingConfig[`catBanner_${cat}`] : null;
+          
+          // Provide default banners for previously hardcoded categories
+          let fallbackBanner = '';
+          if (cat === 'Daily Wear') fallbackBanner = landingConfig?.dailyWear || '';
+          if (cat === 'Sneakers') fallbackBanner = landingConfig?.sneakers || '';
+
+          const bannerImage = customBanner ? convertGDriveUrl(customBanner) : fallbackBanner ? convertGDriveUrl(fallbackBanner) : null;
+
+          return (
+            <div key={cat}>
+              <section id={`section-${id}`} className="scroll-mt-20 bg-black/40 backdrop-blur-sm py-16 sm:py-20 border-t border-white/5">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <SectionHeader title={cat} href={`/${id}`} label="View All Styles" />
+
+                  {bannerImage && (
+                    <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                      className="rounded-2xl overflow-hidden mb-8 h-40 sm:h-52 relative border border-white/10 shadow-2xl">
+                      <img src={bannerImage as string} referrerPolicy="no-referrer" alt={cat} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent flex items-center px-8">
+                        <div>
+                          <p className="text-[#FFE600] font-bold text-xs uppercase tracking-widest mb-1">{landingConfig?.[`catBannerSubtitle_${cat}`] || `${cat} Collection`}</p>
+                          <h3 className="text-white font-black text-2xl sm:text-3xl uppercase">{landingConfig?.[`catBannerTitle_${cat}`] || 'Latest Drops'}</h3>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+                    transition={{ duration: 0.4 }} className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5">
+                    {catProducts.map((p, i) => <ProductCard key={p.id} product={p as any} index={i} />)}
+                  </motion.div>
                 </div>
-                <Link href="/men" className="text-xs font-bold uppercase tracking-wider text-[#FFE600]/70 hover:text-[#FFE600] transition-colors">
-                  View All →
-                </Link>
-              </motion.div>
+              </section>
+
+              {/* Insert Trending Banner after the first category */}
+              {idx === 0 && <TrendingBanner />}
             </div>
-            <ProductCarousel />
-          </div>
-        </section>
+          );
+        })}
 
-        {/* ── Trending ── */}
-        <TrendingBanner />
-
-        {/* ══ DAILY WEAR ══════════════════════════════════════════════ */}
-        <section id="daily-wear" className="scroll-mt-20 bg-black/50 backdrop-blur-sm py-16 sm:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <SectionHeader title="Daily Wear" href="/daily-wear" label="View All Styles" />
-
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-              className="rounded-2xl overflow-hidden mb-8 h-40 sm:h-52 relative">
-              <img src="https://picsum.photos/seed/dailywear-banner/1440/350" alt="Daily Wear" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent flex items-center px-8">
-                <div>
-                  <p className="text-[#FFE600] font-bold text-xs uppercase tracking-widest mb-1">Everyday Collection</p>
-                  <h3 className="text-white font-black text-xl sm:text-2xl uppercase">Minimalist Drops</h3>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-              transition={{ duration: 0.4 }} className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5">
-              {DAILY_WEAR_PREVIEW.map((p, i) => <ProductCard key={p.id} product={p as any} index={i} />)}
-            </motion.div>
-          </div>
-        </section>
-
-        {/* ══ SNEAKERS ════════════════════════════════════════════════ */}
-        <section id="sneakers" className="scroll-mt-20 bg-black/40 backdrop-blur-sm py-16 sm:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <SectionHeader title="Sneakers" href="/sneakers" label="View All Kicks" />
-
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-              className="rounded-2xl overflow-hidden mb-8 h-40 sm:h-52 relative">
-              <img src="https://picsum.photos/seed/sneakers-banner/1440/350" alt="Sneakers" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent flex items-center px-8">
-                <div>
-                  <p className="text-[#FFE600] font-bold text-xs uppercase tracking-widest mb-1">Friday Drops</p>
-                  <h3 className="text-white font-black text-xl sm:text-2xl uppercase">Step Up Your Game</h3>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-              transition={{ duration: 0.4 }} className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5">
-              {SNEAKERS_PREVIEW.map((p, i) => <ProductCard key={p.id} product={p as any} index={i} />)}
-            </motion.div>
-          </div>
-        </section>
+        {/* ══ PROMO BANNERS ═══════════════════════════════════════════ */}
+        {(landingConfig?.promoBanner1 || landingConfig?.promoBanner2) && (
+          <section className="py-12 bg-black/40">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+              {landingConfig?.promoBanner1 && (
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="rounded-2xl overflow-hidden h-40 sm:h-64 relative border border-white/10 shadow-2xl">
+                  <img src={convertGDriveUrl(landingConfig.promoBanner1)} referrerPolicy="no-referrer" alt="Promotional Banner" className="w-full h-full object-cover" />
+                </motion.div>
+              )}
+              {landingConfig?.promoBanner2 && (
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="rounded-2xl overflow-hidden h-40 sm:h-64 relative border border-white/10 shadow-2xl">
+                  <img src={convertGDriveUrl(landingConfig.promoBanner2)} referrerPolicy="no-referrer" alt="Promotional Banner" className="w-full h-full object-cover" />
+                </motion.div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* ══ ABOUT ═══════════════════════════════════════════════════ */}
         <section id="about" className="scroll-mt-20 py-20 sm:py-28 relative overflow-hidden">
@@ -223,7 +226,7 @@ export default function Home() {
             {/* Brand story strip */}
             <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               className="rounded-3xl overflow-hidden relative">
-              <img src="https://picsum.photos/seed/about-brand/1440/500" alt="ADIS Brand" className="w-full h-56 sm:h-72 object-cover" />
+              <img src={convertGDriveUrl(landingConfig?.bestStore) || "https://picsum.photos/seed/about-brand/1440/500"} referrerPolicy="no-referrer" alt="ADIS Brand" className="w-full h-56 sm:h-72 object-cover" />
               <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent flex items-center px-8 sm:px-14">
                 <div className="max-w-md">
                   <p className="text-[#FFE600] font-black text-xs uppercase tracking-[0.3em] mb-3">Munot Chambers · Ahmednagar</p>

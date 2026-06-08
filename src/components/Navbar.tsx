@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, ShoppingBag, Heart, X,
-  User, ShieldCheck, Home, Shirt, Flame, Info, Crown
+  User, ShieldCheck, Home, Shirt, Flame, Info, Crown, Camera
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { cn } from '@/lib/utils';
@@ -23,11 +23,12 @@ function scrollToSection(id: string) {
 
 const NAV_LINKS = [
   { label: 'Home',       href: '/',           anchor: null },
-  { label: 'Men',        href: '/#men',        anchor: 'men' },
-  { label: 'Daily Wear', href: '/#daily-wear', anchor: 'daily-wear' },
-  { label: 'Sneakers',   href: '/#sneakers',   anchor: 'sneakers' },
-  { label: 'Members',    href: '/members',     anchor: null },
-  { label: 'About',      href: '/#about',      anchor: 'about' },
+  { label: 'Men',        href: '/men',        anchor: null },
+  { label: 'Daily Wear', href: '/daily-wear', anchor: null },
+  { label: 'Sneakers',   href: '/sneakers',   anchor: null },
+  { label: 'Feeds',      href: '/feeds',      anchor: null },
+  { label: 'Members',    href: '/members',    anchor: null },
+  { label: 'About',      href: '/#about',     anchor: 'about' },
 ];
 
 export default function Navbar() {
@@ -46,7 +47,7 @@ export default function Navbar() {
   // Track which section is in viewport
   useEffect(() => {
     if (!isHome) return;
-    const ids = ['men', 'daily-wear', 'sneakers', 'about'];
+    const ids = ['about'];
     const observers: IntersectionObserver[] = [];
 
     ids.forEach((id) => {
@@ -88,12 +89,7 @@ export default function Navbar() {
   function isActive(link: typeof NAV_LINKS[0]) {
     if (link.href === '/' && isHome && !activeAnchor) return true;
     if (link.anchor && activeAnchor === link.anchor) return true;
-    if (!isHome && link.anchor) {
-      // On a category page, highlight the matching nav item
-      if (pathname.startsWith('/men') && link.anchor === 'men') return true;
-      if (pathname.startsWith('/daily-wear') && link.anchor === 'daily-wear') return true;
-      if (pathname.startsWith('/sneakers') && link.anchor === 'sneakers') return true;
-    }
+    if (link.href !== '/' && !link.href.startsWith('/#') && pathname.startsWith(link.href)) return true;
     return false;
   }
 
@@ -333,6 +329,7 @@ export default function Navbar() {
                 {link.label === 'Men' && <Shirt className="w-5 h-5" />}
                 {link.label === 'Daily Wear' && <User className="w-5 h-5" />}
                 {link.label === 'Sneakers' && <Flame className="w-5 h-5" />}
+                {link.label === 'Feeds' && <Camera className="w-5 h-5" />}
                 {link.label === 'Members' && <Crown className={cn('w-5 h-5', active ? 'text-[#FFE600]' : '')} />}
                 {link.label === 'About' && <Info className="w-5 h-5" />}
               </div>

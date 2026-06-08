@@ -10,7 +10,7 @@ import DetailAccordions from '@/components/DetailAccordions';
 import { useStore } from '@/store/useStore';
 import { formatCurrency } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ShoppingBag, Heart, Truck, ShieldCheck, RotateCcw } from 'lucide-react';
+import { ChevronLeft, ShoppingBag, Heart, Truck, ShieldCheck, RotateCcw, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
 
@@ -108,9 +108,15 @@ export default function ProductDetailContent({ product, backHref = '/men', backL
 
             {/* Details */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
-              <p className="text-xs text-[#8B7700] font-bold uppercase tracking-wider mb-1">
-                {product.fandom_tag} / {product.fit_type}
-              </p>
+              <div className="flex justify-between items-center mb-1">
+                <p className="text-xs text-[#8B7700] font-bold uppercase tracking-wider">
+                  {product.fandom_tag} / {product.fit_type}
+                </p>
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold tracking-wider" title="Total Product Views">
+                  <Eye className="w-3.5 h-3.5" />
+                  {((Math.floor(product.id.length * 423.5) % 15000 + 3000) / 1000).toFixed(1)}k views
+                </div>
+              </div>
               <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-wider mb-4">{product.title}</h1>
 
               <PricingDisplay prices={product.prices} size="lg" />
@@ -148,16 +154,37 @@ export default function ProductDetailContent({ product, backHref = '/men', backL
                   {addedToCart ? 'Added to Cart!' : selectedSize ? `Add to Cart — ${formatCurrency(effectivePrice)}` : 'Select a Size'}
                 </button>
 
-                <button
-                  onClick={() => toggleWishlist(product.id)}
-                  className={cn(
-                    'w-full py-3 rounded-full text-sm font-semibold border-2 transition-all duration-200 flex items-center justify-center gap-2',
-                    isWishlisted ? 'border-[#FFE600] text-[#FFE600] bg-red-50' : 'border-gray-200 hover:border-black'
-                  )}
-                >
-                  <Heart className={cn('w-4 h-4 transition-all', isWishlisted && 'fill-[#FFE600] text-[#FFE600]')} />
-                  {isWishlisted ? 'Wishlisted ♥' : 'Add to Wishlist'}
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => toggleWishlist(product.id)}
+                    className={cn(
+                      'flex-1 py-3 rounded-full text-sm font-semibold border-2 transition-all duration-200 flex items-center justify-center gap-2',
+                      isWishlisted ? 'border-[#FFE600] text-[#FFE600] bg-red-50' : 'border-gray-200 hover:border-black'
+                    )}
+                  >
+                    <Heart className={cn('w-4 h-4 transition-all', isWishlisted && 'fill-[#FFE600] text-[#FFE600]')} />
+                    {isWishlisted ? 'Wishlisted ♥' : 'Wishlist'}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const shareUrl = `${window.location.origin}/p/${product.id}`;
+                      if (navigator.share) {
+                        navigator.share({
+                          title: `${product.title} - ADIS`,
+                          url: shareUrl
+                        }).catch(console.error);
+                      } else {
+                        navigator.clipboard.writeText(shareUrl);
+                        alert('Link copied to clipboard!');
+                      }
+                    }}
+                    className="w-12 h-[52px] rounded-full text-sm font-semibold border-2 border-gray-200 hover:border-black transition-all duration-200 flex items-center justify-center"
+                    aria-label="Share product"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                  </button>
+                </div>
               </div>
 
               <MembershipUpsell />
