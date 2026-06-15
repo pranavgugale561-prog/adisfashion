@@ -33,6 +33,17 @@ export default function RootLayout({
         <link rel="preconnect" href="https://drive.google.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://lh3.googleusercontent.com" crossOrigin="anonymous" />
         <link rel="preload" href="/videos/loader-video.mp4" as="video" type="video/mp4" />
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                  console.log('SW registration failed: ', err);
+                });
+              });
+            }
+          `
+        }} />
       </head>
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
         {/* FirebaseProvider syncs products & landing config from Firebase into the Zustand store */}

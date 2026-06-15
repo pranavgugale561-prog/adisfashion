@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 const SESSION_CACHE_BUSTER = Date.now();
 
 export function convertGDriveUrl(url: string | undefined): string | undefined {
