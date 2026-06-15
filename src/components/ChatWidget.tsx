@@ -195,19 +195,18 @@ export default function ChatWidget() {
           
           // Trigger native device notification
           if ('Notification' in window && Notification.permission === 'granted') {
-            try {
-              new Notification(msgTitle, {
-                body: msgBody,
-                icon: '/favicon.ico',
-                badge: '/favicon.ico'
+            if (navigator.serviceWorker) {
+              navigator.serviceWorker.getRegistration().then(reg => {
+                if (reg) {
+                  reg.showNotification(msgTitle, { body: msgBody, icon: '/favicon.ico', badge: '/favicon.ico' }).catch(e => console.error('SW Notify Error:', e));
+                } else {
+                  try { new Notification(msgTitle, { body: msgBody, icon: '/favicon.ico', badge: '/favicon.ico' }); } catch(e){}
+                }
+              }).catch(() => {
+                try { new Notification(msgTitle, { body: msgBody, icon: '/favicon.ico', badge: '/favicon.ico' }); } catch(e){}
               });
-            } catch (e) {
-              // Fallback for some mobile browsers that require Service Worker for notifications
-              if (navigator.serviceWorker) {
-                navigator.serviceWorker.ready.then(registration => {
-                  registration.showNotification(msgTitle, { body: msgBody, icon: '/favicon.ico' });
-                });
-              }
+            } else {
+              try { new Notification(msgTitle, { body: msgBody, icon: '/favicon.ico', badge: '/favicon.ico' }); } catch(e){}
             }
           }
 
