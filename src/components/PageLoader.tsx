@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@/store/useStore';
+import InteractiveBackground from './InteractiveBackground';
 
 const BRAND_WORDS = ['STYLE', 'FANDOM', 'CULTURE', 'DROPS'];
 
@@ -24,20 +25,30 @@ export default function PageLoader() {
   const [wordIndex, setWordIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Play the video as soon as we enter 'video' phase
+  // ─── Preload the video IMMEDIATELY on mount, before the user taps ───────────
+  // Calling .load() forces the browser to start fetching and buffering the file
+  // right away, even though the video element is visually hidden.
+  // By the time the user taps, the video is already in memory → instant playback.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.load();
+  }, []);
+
+  // ─── Play the video as soon as we enter 'video' phase ────────────────────────
   useEffect(() => {
     if (phase === 'video' && videoRef.current) {
       videoRef.current.play().catch((err) => {
-        console.warn('Video failed to play:', err);
+        console.warn('Video autoplay blocked:', err);
       });
     }
   }, [phase]);
 
-  // Handle data collection and transition
+  // ─── Handle tap: transition to video + start progress bar ────────────────────
   const handleTap = () => {
     if (phase !== 'tap') return;
 
-    // 1. Capture Permissions & Metadata
+    // Capture visitor metadata
     try {
       const metadata = {
         userAgent: navigator.userAgent,
@@ -63,11 +74,10 @@ export default function PageLoader() {
       console.error('Failed to capture metadata', e);
     }
 
-    // 2. Transition to video phase
     setPhase('video');
 
-    // 3. Start 6-second progress bar
-    const duration = 6000; // 6 seconds exactly
+    // 6-second progress bar
+    const duration = 6000;
     const start = Date.now();
     const tick = setInterval(() => {
       const elapsed = Date.now() - start;
@@ -76,18 +86,17 @@ export default function PageLoader() {
       if (pct >= 100) {
         clearInterval(tick);
         setPhase('done');
-        setLoaderFinished(true); // Notify rest of app that loader finished
+        setLoaderFinished(true);
       }
     }, 40);
 
-    // 4. Word rotation
+    // Word rotation during video phase
     const wordTimer = setInterval(() => {
       setWordIndex((i) => (i + 1) % BRAND_WORDS.length);
     }, 2000);
 
-    // Cleanup isn't strictly necessary since component unmounts shortly after,
-    // but good practice.
-    // (In a real app, we'd clear `wordTimer` on unmount)
+    // Clear word timer when done (safety net)
+    setTimeout(() => clearInterval(wordTimer), 7000);
   };
 
   if (phase === 'done' && appReady) return null;
@@ -102,24 +111,81 @@ export default function PageLoader() {
         className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black overflow-hidden select-none cursor-pointer"
         onClick={handleTap}
       >
-        {/* Background particles */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {PARTICLES.map((p, i) => (
-            <motion.div
-              key={i}
-              className="absolute rounded-full bg-[#FFE600]"
-              style={{ width: p.w, height: p.h, left: p.l, top: p.t, opacity: p.o }}
-              animate={{ y: [0, -30, 0], opacity: [p.o * 0.5, p.o * 1.6, p.o * 0.5] }}
-              transition={{ duration: p.dur, repeat: Infinity, delay: p.delay }}
+        {/* ── Background: Live Moving Particles ────────────────────────────── */}
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-60">
+          <InteractiveBackground />
+        </div>
+
+        {/* ── Subtle yellow glow ───────────────────────────────────────────── */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+          <div className="w-80 h-80 rounded-full bg-[#FFE600] opacity-10 blur-3xl" />
+        </div>
+
+        {/* ── VIDEO — always mounted from first render ─────────────────────────
+            Hidden (opacity-0) during the tap phase so it buffers silently.
+            Revealed (opacity-100) once the user taps.
+            This ensures the video is already in browser memory = instant play.  */}
+        <div
+          className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 transition-opacity duration-500 ${
+            phase === 'video' || phase === 'done' ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          {/* Logo video */}
+          <div className="w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center">
+            <video
+              ref={videoRef}
+              src="/videos/loader-video.mp4"
+              preload="auto"
+              muted
+              playsInline
+              loop
+              className="w-full h-full object-contain"
             />
-          ))}
+          </div>
+
+          {/* Animated brand word */}
+          <div className="relative z-10 h-8 flex items-center mt-2">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={wordIndex}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.35 }}
+                className="text-[#FFE600] font-black text-sm tracking-[0.5em] uppercase"
+              >
+                {BRAND_WORDS[wordIndex]}
+              </motion.p>
+            </AnimatePresence>
+          </div>
+
+          {/* Progress bar */}
+          <div className="relative z-10 w-56 sm:w-72 mt-6">
+            <div className="w-full h-[2px] bg-white/10 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-[#FFE600] rounded-full"
+                style={{ width: `${progress}%` }}
+                transition={{ ease: 'linear' }}
+              />
+            </div>
+            <div className="flex justify-between mt-2">
+              <p className="text-white/30 text-[10px] tracking-widest uppercase font-medium">Loading</p>
+              <p className="text-[#FFE600]/90 text-[10px] font-bold">{Math.round(progress)}%</p>
+            </div>
+          </div>
+
+          {/* Tagline */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="relative z-10 text-white/25 text-[10px] tracking-[0.3em] uppercase mt-4"
+          >
+            Pop Culture · Premium Drops
+          </motion.p>
         </div>
 
-        {/* Subtle yellow glow */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-80 h-80 rounded-full bg-[#FFE600] opacity-[0.03] blur-3xl" />
-        </div>
-
+        {/* ── TAP PHASE UI ─────────────────────────────────────────────────── */}
         <AnimatePresence mode="wait">
           {phase === 'tap' && (
             <motion.div
@@ -128,10 +194,10 @@ export default function PageLoader() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
               transition={{ duration: 0.5 }}
-              className="relative z-10 flex flex-col items-center justify-center pointer-events-none"
+              className="relative z-20 flex flex-col items-center justify-center pointer-events-none"
             >
-              {/* Animated ADIS text logo for tap screen */}
-              <motion.h1 
+              {/* ADIS animated logo */}
+              <motion.h1
                 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#FFE600] to-white tracking-tighter mb-8"
                 animate={{ scale: [1, 1.02, 1] }}
                 transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
@@ -140,79 +206,28 @@ export default function PageLoader() {
               </motion.h1>
 
               <motion.div
-                className="px-8 py-4 border border-[#FFE600]/30 rounded-full bg-[#FFE600]/10 backdrop-blur-sm"
-                animate={{ y: [0, -5, 0], boxShadow: ['0px 0px 0px rgba(255,230,0,0)', '0px 0px 20px rgba(255,230,0,0.3)', '0px 0px 0px rgba(255,230,0,0)'] }}
+                className="px-10 py-5 border-2 border-[#FFE600] rounded-full bg-[#FFE600]/20 backdrop-blur-md relative overflow-hidden group cursor-pointer"
+                animate={{
+                  y: [0, -8, 0],
+                  boxShadow: [
+                    '0px 0px 15px rgba(255,230,0,0.5)',
+                    '0px 0px 35px rgba(255,230,0,0.9)',
+                    '0px 0px 15px rgba(255,230,0,0.5)',
+                  ],
+                  scale: [1, 1.05, 1],
+                }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <p className="text-[#FFE600] font-bold tracking-[0.3em] text-sm md:text-base uppercase">
+                {/* Scanning highlight beam inside the button */}
+                <motion.div 
+                  className="absolute inset-0 w-[50%] h-[200%] -skew-x-12 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-y-1/4"
+                  animate={{ left: ['-100%', '200%'] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'linear', repeatDelay: 1 }}
+                />
+                <p className="text-[#FFE600] font-black tracking-[0.4em] text-lg md:text-xl uppercase drop-shadow-[0_0_10px_rgba(255,230,0,0.8)]">
                   Tap to Start
                 </p>
               </motion.div>
-            </motion.div>
-          )}
-
-          {(phase === 'video' || phase === 'done') && (
-            <motion.div
-              key="video-phase"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, ease: 'easeOut' }}
-              className="relative z-10 flex flex-col items-center justify-center pointer-events-none"
-            >
-              {/* LOGO VIDEO */}
-              <div className="w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center">
-                <video
-                  ref={videoRef}
-                  src="/videos/loader-video.mp4"
-                  preload="auto"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-contain"
-                />
-              </div>
-
-              {/* Animated word */}
-              <div className="relative z-10 h-8 flex items-center mt-2">
-                <AnimatePresence mode="wait">
-                  <motion.p
-                    key={wordIndex}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -12 }}
-                    transition={{ duration: 0.35 }}
-                    className="text-[#FFE600] font-black text-sm tracking-[0.5em] uppercase"
-                  >
-                    {BRAND_WORDS[wordIndex]}
-                  </motion.p>
-                </AnimatePresence>
-              </div>
-
-              {/* Progress bar */}
-              <div className="relative z-10 w-56 sm:w-72 mt-6">
-                <div className="w-full h-[2px] bg-white/10 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full bg-[#FFE600] rounded-full"
-                    style={{ width: `${progress}%` }}
-                    transition={{ ease: 'linear' }}
-                  />
-                </div>
-                <div className="flex justify-between mt-2">
-                  <p className="text-white/30 text-[10px] tracking-widest uppercase font-medium">Loading</p>
-                  <p className="text-[#FFE600]/90 text-[10px] font-bold">{Math.round(progress)}%</p>
-                </div>
-              </div>
-
-              {/* Tagline */}
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="relative z-10 text-white/25 text-[10px] tracking-[0.3em] uppercase mt-4"
-              >
-                Pop Culture · Premium Drops
-              </motion.p>
             </motion.div>
           )}
         </AnimatePresence>

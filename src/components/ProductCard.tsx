@@ -17,6 +17,7 @@ interface ProductCardProps {
 function categoryHref(product: Product) {
   if (product.category === 'Daily Wear') return `/daily-wear/${product.id}`;
   if (product.category === 'Sneakers') return `/sneakers/${product.id}`;
+  if (product.category === 'Premium Accessories') return `/premium-accessories/${product.id}`;
   return `/men/${product.id}`;
 }
 
@@ -33,9 +34,8 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.05, duration: 0.4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: (index % 10) * 0.05, duration: 0.4 }}
       className="group"
     >
       <Link href={href} className="block">

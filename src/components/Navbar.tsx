@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, ShoppingBag, Heart, X,
-  User, ShieldCheck, Home, Shirt, Flame, Info, Crown, Camera
+  User, ShieldCheck, Home, Shirt, Flame, Info, Crown, Camera, Store
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { cn } from '@/lib/utils';
@@ -23,9 +23,11 @@ function scrollToSection(id: string) {
 
 const NAV_LINKS = [
   { label: 'Home',       href: '/',           anchor: null },
+  { label: 'Shop',       href: '/shop',       anchor: null },
   { label: 'Men',        href: '/men',        anchor: null },
   { label: 'Daily Wear', href: '/daily-wear', anchor: null },
   { label: 'Sneakers',   href: '/sneakers',   anchor: null },
+  { label: 'Premium Accessories', href: '/premium-accessories', anchor: null },
   { label: 'Feeds',      href: '/feeds',      anchor: null },
   { label: 'Members',    href: '/members',    anchor: null },
   { label: 'About',      href: '/#about',     anchor: 'about' },
@@ -326,6 +328,7 @@ export default function Navbar() {
             >
               <div className={cn('transition-transform duration-300', active ? '-translate-y-1 scale-110' : '')}>
                 {link.label === 'Home' && <Home className="w-5 h-5" />}
+                {link.label === 'Shop' && <Store className="w-5 h-5" />}
                 {link.label === 'Men' && <Shirt className="w-5 h-5" />}
                 {link.label === 'Daily Wear' && <User className="w-5 h-5" />}
                 {link.label === 'Sneakers' && <Flame className="w-5 h-5" />}

@@ -23,10 +23,14 @@ const DAILY_WEAR_PRODUCTS = [
 
 export default function DailyWearPage() {
   const [cartOpen, setCartOpen] = useState(false);
-  const { cart, landingConfig } = useStore();
+  const { cart, landingConfig, products } = useStore();
   const cartCount = cart.reduce((a, c) => a + c.quantity, 0);
   
   const dailyWearBanner = landingConfig?.['catBanner_Daily Wear'] || landingConfig?.dailyWear;
+
+  const categoryProducts = useMemo(() => {
+    return products.filter(p => p.category && p.category.toLowerCase() === 'daily wear');
+  }, [products]);
 
   return (
     <>
@@ -37,7 +41,7 @@ export default function DailyWearPage() {
             <div>
               <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-[0.15em]">Daily Wear</h1>
               <p className="text-gray-400 text-sm mt-1 font-medium">
-                {landingConfig?.['catPageSubtitle_Daily Wear'] || 'Everyday essentials & streetwear'} — {DAILY_WEAR_PRODUCTS.length} styles
+                {landingConfig?.['catPageSubtitle_Daily Wear'] || 'Everyday Essentials'} — {categoryProducts.length} styles
               </p>
             </div>
             <button onClick={() => setCartOpen(true)} className="relative p-2 hover:text-[#8B7700] transition-colors">
@@ -56,9 +60,15 @@ export default function DailyWearPage() {
           />
 
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-            {DAILY_WEAR_PRODUCTS.map((product, i) => (
-              <ProductCard key={product.id} product={product as any} index={i} />
-            ))}
+            {categoryProducts.length > 0 ? (
+              categoryProducts.map((product, i) => (
+                <ProductCard key={product.id} product={product} index={i} />
+              ))
+            ) : (
+              <div className="col-span-full py-12 text-center text-gray-500 font-medium">
+                No products found in this category yet.
+              </div>
+            )}
           </motion.div>
         </div>
       </main>

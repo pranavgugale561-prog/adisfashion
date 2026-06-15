@@ -49,8 +49,8 @@ export default function CategoriesGrid() {
       anchor: `section-${id}`,
       accent: '#FFE600',
       count: `${count}+ Styles`,
-      span: isFeatured ? 'col-span-2 row-span-2' : 'col-span-1 row-span-1',
-      textSize: isFeatured ? 'text-3xl sm:text-4xl' : 'text-xl sm:text-2xl',
+      span: 'col-span-1 row-span-1',
+      textSize: 'text-xl sm:text-2xl',
     };
   });
 
@@ -90,7 +90,7 @@ export default function CategoriesGrid() {
             transition={{ delay: 0.3 }}
             className="text-white/25 text-xs tracking-widest uppercase hidden sm:block"
           >
-            240+ designs across 3 categories
+            240+ designs across {uniqueCategories.length} categories
           </motion.p>
         </motion.div>
 
@@ -100,7 +100,7 @@ export default function CategoriesGrid() {
           whileInView="show"
           viewport={{ once: true, margin: '-80px' }}
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12 } } }}
-          className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 auto-rows-[200px] sm:auto-rows-[270px]"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 auto-rows-[200px] sm:auto-rows-[270px]"
         >
           {displayCategories.map((cat, i) => (
             <motion.div

@@ -134,26 +134,65 @@ export default function HeroBanner() {
       </div>
 
       {/* Feature Bar */}
-      <div className="bg-white/60 backdrop-blur-xl py-5 sm:py-6 border-b border-black/5 relative z-20 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-4 text-center sm:text-left">
-            <div className="flex items-center gap-3">
-              <div className="p-1 rounded-full border-[1.5px] border-black flex items-center justify-center relative">
-                <RefreshCw className="w-5 h-5 text-black" />
-                <IndianRupee className="w-2.5 h-2.5 text-black absolute" />
+      <div className="relative z-20 bg-black overflow-hidden">
+        {/* Shimmer sweep animation */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'linear-gradient(105deg, transparent 40%, rgba(255,230,0,0.07) 50%, transparent 60%)',
+            animation: 'featureShimmer 3.5s ease-in-out infinite',
+          }}
+        />
+        <style>{`
+          @keyframes featureShimmer {
+            0%   { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+          }
+        `}</style>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+          <div className="flex flex-col sm:flex-row items-center justify-around gap-4 sm:gap-0">
+
+            {/* Item 1 — Cashback */}
+            <div className="flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-full bg-[#FFE600] flex items-center justify-center shadow-[0_0_14px_rgba(255,230,0,0.5)] shrink-0 relative">
+                <RefreshCw className="w-4 h-4 text-black" />
+                <IndianRupee className="w-2.5 h-2.5 text-black absolute bottom-1.5 right-1.5" />
               </div>
-              <div className="text-[12px] font-bold tracking-wider text-black leading-snug uppercase">10% Cashback<br />on all App orders</div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-1.5 rounded-full border-[1.5px] border-black">
-                <RefreshCw className="w-5 h-5 text-black" />
+              <div>
+                <p className="text-[#FFE600] text-[13px] font-black tracking-widest uppercase leading-none">10% Cashback</p>
+                <p className="text-white/50 text-[10px] tracking-wider uppercase mt-0.5">On all App orders</p>
               </div>
-              <div className="text-[12px] font-bold tracking-wider text-black leading-snug uppercase">30 days Easy Returns<br />&amp; Exchanges</div>
             </div>
-            <div className="flex items-center gap-3">
-              <Truck className="w-7 h-7 text-black stroke-[1.5px]" />
-              <div className="text-[12px] font-bold tracking-wider text-black leading-snug uppercase">Free &amp;<br />Fast Shipping</div>
+
+            {/* Divider */}
+            <div className="hidden sm:block w-px h-8 bg-white/10" />
+
+            {/* Item 2 — Returns */}
+            <div className="flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-full bg-[#FFE600] flex items-center justify-center shadow-[0_0_14px_rgba(255,230,0,0.5)] shrink-0">
+                <RefreshCw className="w-4 h-4 text-black" />
+              </div>
+              <div>
+                <p className="text-[#FFE600] text-[13px] font-black tracking-widest uppercase leading-none">30-Day Returns</p>
+                <p className="text-white/50 text-[10px] tracking-wider uppercase mt-0.5">Easy &amp; free exchanges</p>
+              </div>
             </div>
+
+            {/* Divider */}
+            <div className="hidden sm:block w-px h-8 bg-white/10" />
+
+            {/* Item 3 — Shipping */}
+            <div className="flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-full bg-[#FFE600] flex items-center justify-center shadow-[0_0_14px_rgba(255,230,0,0.5)] shrink-0">
+                <Truck className="w-4 h-4 text-black" />
+              </div>
+              <div>
+                <p className="text-[#FFE600] text-[13px] font-black tracking-widest uppercase leading-none">Free Shipping</p>
+                <p className="text-white/50 text-[10px] tracking-wider uppercase mt-0.5">On orders ₹999+</p>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

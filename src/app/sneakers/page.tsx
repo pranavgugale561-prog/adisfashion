@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
 import CartDrawer from '@/components/CartDrawer';
 import ProductCard from '@/components/ProductCard';
@@ -20,13 +20,16 @@ const SNEAKERS_PRODUCTS = [
   { id: 'snk-foam-slide', title: 'ADIS Foam Slide Sandal', category: 'Sneakers', fit_type: 'Regular', fandom_tag: 'Originals', badges: [] as string[], prices: { base: 1499, sale: 999, member: 799 }, images: ['https://picsum.photos/seed/snk7/800/1067', 'https://picsum.photos/seed/snk7b/800/1067', 'https://picsum.photos/seed/snk7c/800/1067'], variants: [{ size: 'S', stock: 20 }, { size: 'M', stock: 35 }, { size: 'L', stock: 40 }, { size: 'XL', stock: 18 }, { size: 'XXL', stock: 8 }], details: { material: 'EVA Foam', gsm: 'N/A', wash_care: 'Rinse with water' } },
   { id: 'snk-boot-tan', title: 'ADIS Trail Boot Tan', category: 'Sneakers', fit_type: 'Regular', fandom_tag: 'Originals', badges: ['NEW'] as string[], prices: { base: 5499, sale: 3999, member: 3499 }, images: ['https://picsum.photos/seed/snk8/800/1067', 'https://picsum.photos/seed/snk8b/800/1067', 'https://picsum.photos/seed/snk8c/800/1067'], variants: [{ size: 'S', stock: 4 }, { size: 'M', stock: 9 }, { size: 'L', stock: 12 }, { size: 'XL', stock: 6 }, { size: 'XXL', stock: 2 }], details: { material: 'Full Grain Leather, Lug Sole', gsm: 'N/A', wash_care: 'Leather conditioner, spot clean' } },
 ];
-
 export default function SneakersPage() {
   const [cartOpen, setCartOpen] = useState(false);
-  const { cart, landingConfig } = useStore();
+  const { cart, landingConfig, products } = useStore();
   const cartCount = cart.reduce((a, c) => a + c.quantity, 0);
   
-  const sneakersBanner = landingConfig?.catBanner_Sneakers || landingConfig?.sneakers;
+  const sneakersBanner = landingConfig?.['catBanner_Sneakers'] || landingConfig?.sneakers;
+
+  const categoryProducts = useMemo(() => {
+    return products.filter(p => p.category && p.category.toLowerCase() === 'sneakers');
+  }, [products]);
 
   return (
     <>
@@ -37,7 +40,7 @@ export default function SneakersPage() {
             <div>
               <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-[0.15em]">Sneakers</h1>
               <p className="text-gray-400 text-sm mt-1 font-medium">
-                {landingConfig?.catPageSubtitle_Sneakers || 'Fresh kicks & collab drops'} — {SNEAKERS_PRODUCTS.length} style{SNEAKERS_PRODUCTS.length !== 1 && 's'}
+                {landingConfig?.['catPageSubtitle_Sneakers'] || 'Step into the future'} — {categoryProducts.length} styles
               </p>
             </div>
             <button onClick={() => setCartOpen(true)} className="relative p-2 hover:text-[#8B7700] transition-colors">
@@ -56,9 +59,15 @@ export default function SneakersPage() {
           />
 
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-            {SNEAKERS_PRODUCTS.map((product, i) => (
-              <ProductCard key={product.id} product={product as any} index={i} />
-            ))}
+            {categoryProducts.length > 0 ? (
+              categoryProducts.map((product, i) => (
+                <ProductCard key={product.id} product={product} index={i} />
+              ))
+            ) : (
+              <div className="col-span-full py-12 text-center text-gray-500 font-medium">
+                No products found in this category yet.
+              </div>
+            )}
           </motion.div>
         </div>
       </main>

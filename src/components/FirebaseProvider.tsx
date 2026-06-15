@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useStore } from '@/store/useStore';
+import { useStore, MOCK_PRODUCTS } from '@/store/useStore';
 import type { Product } from '@/types';
 
 // ─── Schema bridge ──────────────────────────────────────────────────────────
@@ -12,6 +12,14 @@ import type { Product } from '@/types';
 
 function normaliseProduct(raw: any, fallback: Product | undefined): Product | null {
   if (!raw) return null;
+
+  // --- Migration for stale local data ---
+  if (raw.id) {
+    const sid = String(raw.id);
+    if (sid.startsWith('dw-') && raw.category === 'Men') raw.category = 'Daily Wear';
+    if (sid.startsWith('snk-') && raw.category === 'Men') raw.category = 'Sneakers';
+  }
+  // --------------------------------------
 
   // If the product already has the frontend's `prices` object — it's already rich
   if (raw.prices && typeof raw.prices === 'object') {
@@ -111,16 +119,24 @@ export default function FirebaseProvider({ children }: { children: React.ReactNo
              let hasLocalProducts = false;
              
              if (localProductsStr) {
-                const localProducts = JSON.parse(localProductsStr);
-                if (Array.isArray(localProducts) && localProducts.length > 0) {
-                   hasLocalProducts = true;
-                   const normalised = localProducts.map((r: any) => {
-                      const existing = storeProductsRef.current.find(p => String(p.id) === String(r?.id));
-                      return normaliseProduct(r, existing);
-                   }).filter((p): p is Product => p !== null);
-                   if (normalised.length > 0) setFirebaseProducts(normalised);
-                }
-             } 
+                 const localProducts = JSON.parse(localProductsStr);
+                 if (Array.isArray(localProducts) && localProducts.length > 0) {
+                    hasLocalProducts = true;
+                    const normalised = localProducts.map((r: any) => {
+                       const existing = storeProductsRef.current.find(p => String(p.id) === String(r?.id));
+                       return normaliseProduct(r, existing);
+                    }).filter((p): p is Product => p !== null);
+                    if (normalised.length > 0) {
+                       // ── MERGE: update/add localStorage products into the full mock catalogue
+                       // so the shop always shows every product across the site.
+                       const mockProducts = MOCK_PRODUCTS;
+                       const normalisedIds = new Set(normalised.map(p => String(p.id)));
+                       // Keep mock products whose IDs are NOT in localStorage (they weren't overridden)
+                       const keepFromMock = mockProducts.filter(p => !normalisedIds.has(String(p.id)));
+                       setFirebaseProducts([...normalised, ...keepFromMock]);
+                    }
+                 }
+              } 
              
              if (!hasLocalProducts) {
                 // Seed the Admin Panel with our current site products if it's empty
@@ -158,13 +174,19 @@ export default function FirebaseProvider({ children }: { children: React.ReactNo
                  if (e.key === 'ADIS_products' && e.newValue) {
                      try {
                          const localProducts = JSON.parse(e.newValue);
-                         if (Array.isArray(localProducts)) {
-                             const normalised = localProducts.map((r: any) => {
-                                 const existing = storeProductsRef.current.find(p => String(p.id) === String(r?.id));
-                                 return normaliseProduct(r, existing);
-                             }).filter((p): p is Product => p !== null);
-                             if (normalised.length > 0) setFirebaseProducts(normalised);
-                         }
+                          if (Array.isArray(localProducts)) {
+                              const normalised = localProducts.map((r: any) => {
+                                  const existing = storeProductsRef.current.find(p => String(p.id) === String(r?.id));
+                                  return normaliseProduct(r, existing);
+                              }).filter((p): p is Product => p !== null);
+                              if (normalised.length > 0) {
+                                  // ── MERGE: keep all mock products not overridden by admin
+                                  const mockProducts = MOCK_PRODUCTS;
+                                  const normalisedIds = new Set(normalised.map(p => String(p.id)));
+                                  const keepFromMock = mockProducts.filter(p => !normalisedIds.has(String(p.id)));
+                                  setFirebaseProducts([...normalised, ...keepFromMock]);
+                              }
+                          }
                      } catch(err) {}
                  }
                  if (e.key === 'ADIS_landingConfig' && e.newValue) {
@@ -221,7 +243,12 @@ export default function FirebaseProvider({ children }: { children: React.ReactNo
             .filter((p): p is Product => p !== null);
 
           if (normalised.length > 0) {
-            setFirebaseProducts(normalised);
+            // ── MERGE: Firebase products update matching mock products but
+            // we keep ALL mock products so the shop always shows everything.
+            const mockProducts = MOCK_PRODUCTS;
+            const normalisedIds = new Set(normalised.map(p => String(p.id)));
+            const keepFromMock = mockProducts.filter(p => !normalisedIds.has(String(p.id)));
+            setFirebaseProducts([...normalised, ...keepFromMock]);
           }
           setAppReady(true);
         }, (error) => {

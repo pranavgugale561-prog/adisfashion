@@ -266,12 +266,16 @@
       .lead-info span { color: var(--muted); font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
 
       /* Login Screen */
-      .admin-login-overlay { position: fixed; inset: 0; z-index: 10000; background: var(--bg); background-image: radial-gradient(circle at 50% 0%, rgba(255,230,0,0.08) 0%, transparent 70%); display: flex; align-items: center; justify-content: center; padding: 1rem; }
+      .admin-login-overlay { position: fixed; inset: 0; z-index: 10000; background: #000; display: flex; align-items: center; justify-content: center; padding: 1rem; overflow: hidden; }
+      #loginCanvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+      .login-glow-pulse { position: absolute; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(255,230,0,0.06) 0%, transparent 70%); top: 50%; left: 50%; transform: translate(-50%,-50%); animation: loginPulse 4s ease-in-out infinite; pointer-events: none; }
+      @keyframes loginPulse { 0%,100% { opacity: 0.5; transform: translate(-50%,-50%) scale(1); } 50% { opacity: 1; transform: translate(-50%,-50%) scale(1.15); } }
       .admin-login-box { 
-        background: rgba(10,10,10,0.6); border: 1px solid rgba(255,255,255,0.05); border-radius: 32px; 
+        position: relative; z-index: 2;
+        background: rgba(10,10,10,0.75); border: 1px solid rgba(255,230,0,0.15); border-top: 2px solid rgba(255,230,0,0.5); border-radius: 32px; 
         padding: 3.5rem 3rem; max-width: 420px; width: 100%; text-align: center; 
-        backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px); 
-        box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.02) inset; 
+        backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); 
+        box-shadow: 0 24px 64px rgba(0,0,0,0.7), 0 0 60px rgba(255,230,0,0.04) inset; 
       }
       .admin-login-box h2 { font-family: var(--font-heading); color: var(--gold); font-size: 2.2rem; letter-spacing: 0.15em; margin-bottom: 0.5rem; font-weight: 800; }
       .admin-login-box p { color: var(--muted); font-size: 0.95rem; margin-bottom: 2.5rem; }
@@ -361,6 +365,11 @@
     </div>
 
     <div class="admin-login-overlay" id="loginOverlay">
+      <!-- Live animated particle background -->
+      <canvas id="loginCanvas"></canvas>
+      <!-- Gold radial glow pulse -->
+      <div class="login-glow-pulse"></div>
+
       <div class="admin-login-box">
         <div style="font-family: var(--font-heading); font-size: 2rem; font-weight: 900; color: white;"><span style="color: #FFE600;">A</span>DIS</div>
         <h2>ADMIN</h2>
@@ -373,6 +382,88 @@
         </form>
       </div>
     </div>
+
+    <script>
+      /* ── Admin Login Page — Live Particle Background ─────────────────────── */
+      (function () {
+        const canvas = document.getElementById('loginCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const PARTICLE_COUNT = 220;
+        const GOLD = 'rgba(255, 230, 0,';
+        let particles = [];
+        let animId;
+
+        function resize() {
+          canvas.width  = window.innerWidth;
+          canvas.height = window.innerHeight;
+        }
+
+        function randomBetween(a, b) { return a + Math.random() * (b - a); }
+
+        function createParticle() {
+          return {
+            x:     randomBetween(0, canvas.width),
+            y:     randomBetween(0, canvas.height),
+            r:     randomBetween(0.4, 1.8),
+            alpha: randomBetween(0.15, 0.7),
+            speed: randomBetween(0.08, 0.35),
+            drift: randomBetween(-0.12, 0.12),
+            twinkleSpeed: randomBetween(0.005, 0.02),
+            twinkleDir: Math.random() > 0.5 ? 1 : -1,
+          };
+        }
+
+        function init() {
+          resize();
+          particles = Array.from({ length: PARTICLE_COUNT }, createParticle);
+        }
+
+        function draw() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          particles.forEach(p => {
+            /* twinkle */
+            p.alpha += p.twinkleSpeed * p.twinkleDir;
+            if (p.alpha >= 0.75 || p.alpha <= 0.08) p.twinkleDir *= -1;
+
+            /* drift upward */
+            p.y -= p.speed;
+            p.x += p.drift;
+
+            /* wrap around */
+            if (p.y < -4) { p.y = canvas.height + 4; p.x = randomBetween(0, canvas.width); }
+            if (p.x < -4) p.x = canvas.width + 4;
+            if (p.x > canvas.width + 4) p.x = -4;
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = GOLD + p.alpha.toFixed(2) + ')';
+            ctx.fill();
+          });
+
+          animId = requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', () => {
+          resize();
+          /* redistribute particles across new dimensions */
+          particles.forEach(p => {
+            p.x = randomBetween(0, canvas.width);
+            p.y = randomBetween(0, canvas.height);
+          });
+        });
+
+        /* Start when login overlay is visible; stop after login */
+        init();
+        draw();
+
+        /* Expose stop function so handleLogin can cancel the loop */
+        window._stopLoginParticles = function () {
+          if (animId) cancelAnimationFrame(animId);
+        };
+      })();
+    </script>
 
     <div class="mobile-overlay" id="mobileOverlay"></div>
 
@@ -401,7 +492,6 @@
           <a href="#" data-tab="retention" style="border-left: 3px solid #8b5cf6;"><i class="ph ph-users-three" style="color:#8b5cf6;"></i> Retention Tracker</a>
           <a href="#" data-tab="engagement" style="border-left: 3px solid #3b82f6;"><i class="ph ph-chat-centered-text" style="color:#3b82f6;"></i> Engagement Center</a>
           <a href="#" data-tab="quotations" style="border-left: 3px solid #f59e0b;"><i class="ph ph-receipt" style="color:#f59e0b;"></i> Quotations</a>
-          <a href="#" data-tab="vendors"><i class="ph ph-handshake"></i> Vendors / B2B</a>
           <a href="#" data-tab="database"><i class="ph ph-database"></i> Database Setup</a>
           <a href="#" data-tab="users-orders"><i class="ph ph-users-three"></i> Users & Orders</a>
           <a href="/" target="_blank"><i class="ph ph-globe"></i> View Site</a>
@@ -430,26 +520,9 @@
           </div>
         </div>
 
-        <div class="stats-grid" id="statsGrid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-          <div class="stat-card"><div class="stat-icon gold"><i class="ph ph-eye"></i></div><div><div class="stat-value" id="statViews">0</div><div class="stat-label" id="labelViews">Views Today</div></div></div>
-          <div class="stat-card"><div class="stat-icon green"><i class="ph ph-trend-up"></i></div><div><div class="stat-value" id="statLifetime">0</div><div class="stat-label" id="labelLifetime">Lifetime Traffic</div></div></div>
-          <div class="stat-card"><div class="stat-icon blue"><i class="ph ph-shopping-cart"></i></div><div><div class="stat-value" id="statCartAdds">0</div><div class="stat-label" id="labelCart">Total Cart Adds</div></div></div>
-          <div class="stat-card" id="cardSessions" style="cursor:pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)';this.style.borderColor='var(--gold)'" onmouseout="this.style.transform='translateY(0)';this.style.borderColor='var(--border)'">
-             <div class="stat-icon red"><i class="ph ph-users"></i></div>
-             <div>
-                <div class="stat-value" id="statSessions">0</div>
-                <div class="stat-label"><span class="live-dot"></span>Active Sessions</div>
-                <div style="font-size:0.6rem; color:var(--muted); margin-top:0.2rem;">Click to view live users</div>
-             </div>
-          </div>
-          <div class="stat-card"><div class="stat-icon gold"><i class="ph ph-star"></i></div><div><div class="stat-value" id="statTopProduct" style="font-size:1.2rem;">-</div><div class="stat-label">Most Viewed Product</div></div></div>
-          <div class="stat-card"><div class="stat-icon green"><i class="ph ph-crown"></i></div><div><div class="stat-value" id="statTopCustomer" style="font-size:1.2rem;">-</div><div class="stat-label">Top Customer (Leads)</div></div></div>
-        </div>
 
-        <div class="traffic-chart" id="trafficChart">
-          <h3><span class="live-dot"></span> Real-Time Traffic (Last 7 Days)</h3>
-          <div style="position:relative; height:300px; width:100%;"><canvas id="trafficChartCanvas"></canvas></div>
-        </div>
+
+
 
         <div class="tab-nav">
           <button class="active" data-tab="dashboard">Overview</button>
@@ -467,12 +540,30 @@
           <button data-tab="retention">Retention</button>
           <button data-tab="engagement">Engagement Center</button>
           <button data-tab="quotations">Quotations</button>
-          <button data-tab="vendors">Vendors</button>
           <button data-tab="database">Database Setup</button>
           <button data-tab="users-orders">Users & Orders</button>
         </div>
 
         <div class="tab-content active" id="tab-dashboard">
+        <div class="stats-grid" id="statsGrid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 2rem;">
+          <div class="stat-card"><div class="stat-icon gold"><i class="ph ph-eye"></i></div><div><div class="stat-value" id="statViews">0</div><div class="stat-label" id="labelViews">Views Today</div></div></div>
+          <div class="stat-card"><div class="stat-icon green"><i class="ph ph-trend-up"></i></div><div><div class="stat-value" id="statLifetime">0</div><div class="stat-label" id="labelLifetime">Lifetime Traffic</div></div></div>
+          <div class="stat-card"><div class="stat-icon blue"><i class="ph ph-shopping-cart"></i></div><div><div class="stat-value" id="statCartAdds">0</div><div class="stat-label" id="labelCart">Total Cart Adds</div></div></div>
+          <div class="stat-card" id="cardSessions" style="cursor:pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)';this.style.borderColor='var(--gold)'" onmouseout="this.style.transform='translateY(0)';this.style.borderColor='var(--border)'">
+             <div class="stat-icon red"><i class="ph ph-users"></i></div>
+             <div>
+                <div class="stat-value" id="statSessions">0</div>
+                <div class="stat-label"><span class="live-dot"></span>Active Sessions</div>
+                <div style="font-size:0.6rem; color:var(--muted); margin-top:0.2rem;">Click to view live users</div>
+             </div>
+          </div>
+          <div class="stat-card"><div class="stat-icon gold"><i class="ph ph-star"></i></div><div><div class="stat-value" id="statTopProduct" style="font-size:1.2rem;">-</div><div class="stat-label">Most Viewed Product</div></div></div>
+          <div class="stat-card"><div class="stat-icon green"><i class="ph ph-crown"></i></div><div><div class="stat-value" id="statTopCustomer" style="font-size:1.2rem;">-</div><div class="stat-label">Top Customer (Leads)</div></div></div>
+        </div>
+          <div class="traffic-chart" id="trafficChart" style="margin-bottom: 2rem;">
+            <h3><span class="live-dot"></span> Real-Time Traffic (Last 7 Days)</h3>
+            <div style="position:relative; height:300px; width:100%;"><canvas id="trafficChartCanvas"></canvas></div>
+          </div>
           <h3 style="margin-bottom:0.75rem;color:var(--gold);font-size:0.9rem;">Recent Activity</h3>
           <div class="activity-list" id="recentActivity"></div>
         </div>
@@ -516,6 +607,9 @@
         <div class="tab-content" id="tab-leads">
           <h3 style="margin-bottom:0.75rem;color:var(--gold);font-size:0.9rem;">Captured Leads</h3>
           <div id="leadsContainer"></div>
+          <hr style="border:0; border-top:1px solid var(--border); margin: 2rem 0;">
+          <h3 style="margin-bottom:0.75rem;color:var(--gold);font-size:0.9rem;">Vendor & B2B Inquiries</h3>
+          <div id="vendorsContainer"></div>
         </div>
 
         <div class="tab-content" id="tab-quotations">
@@ -659,23 +753,38 @@
               </div>
           </div>
         </div>
-          <h3 style="margin-bottom:0.75rem;color:var(--gold);font-size:0.9rem;">Vendor & B2B Inquiries</h3>
-          <div id="vendorsContainer"></div>
-        </div>
+
 
         <div class="tab-content" id="tab-products">
-          <!-- EXISTING Tab Product content... -->
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-            <h3 style="color:var(--gold);font-size:0.9rem;">Storefront Products</h3>
-            <div style="display:flex; gap:0.5rem;">
-               <button id="btnResetViews" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.8rem; border-color:#ef4444; color:#ef4444;">Reset All Views</button>
-               <button id="addAdminProductBtn" class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.8rem;"><i class="ph ph-plus"></i> Add Product</button>
+
+          <!-- ── Products Header ─────────────────────────────────────────────── -->
+          <div style="background:linear-gradient(135deg,rgba(255,230,0,0.05),rgba(0,0,0,0)); border:1px solid rgba(255,230,0,0.12); border-radius:16px; padding:1.5rem 1.75rem; margin-bottom:1.5rem; display:flex; flex-wrap:wrap; gap:1rem; align-items:center; justify-content:space-between;">
+            <div>
+              <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.3rem;">
+                <i class="ph ph-storefront" style="font-size:1.5rem; color:var(--gold);"></i>
+                <h3 style="color:var(--white); font-size:1.15rem; font-weight:800; letter-spacing:-0.01em; margin:0;">Storefront Products</h3>
+                <span id="productCountBadge" style="background:var(--gold); color:black; font-size:0.7rem; font-weight:900; padding:0.2rem 0.6rem; border-radius:100px;">0</span>
+              </div>
+              <p style="color:var(--muted); font-size:0.8rem; margin:0;">Changes sync instantly to all users worldwide via Firebase.</p>
+            </div>
+            <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
+              <input type="text" id="productSearchInput" placeholder="🔍  Search products..." oninput="filterAdminProducts(this.value)" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:0.55rem 1rem; border-radius:10px; font-size:0.85rem; width:200px; outline:none; transition:all 0.2s;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+              <button id="btnResetViews" class="btn btn-secondary" style="padding:0.5rem 1rem; font-size:0.8rem; border-color:#ef4444; color:#ef4444; display:flex; align-items:center; gap:0.4rem;"><i class="ph ph-arrow-counter-clockwise"></i> Reset Views</button>
+              <button id="addAdminProductBtn" class="btn btn-primary" style="padding:0.55rem 1.1rem; font-size:0.9rem; display:flex; align-items:center; gap:0.5rem; font-weight:700;"><i class="ph ph-plus-circle" style="font-size:1.1rem;"></i> Add Product</button>
             </div>
           </div>
-          <p style="color:var(--muted); font-size:0.8rem; margin-bottom:1.5rem;">Changes made here instantly synchronize to all users across the world via Firebase.</p>
+
+          <!-- ── Category Filter Bar ─────────────────────────────────────────── -->
+          <div id="categoryFilterBar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; margin-bottom:1rem;">
+            <!-- Injected by renderCategoryFilterBar() -->
+          </div>
+
+          <!-- ── Category Manager ────────────────────────────────────────────── -->
           <div id="categoryManager"></div>
-          <div id="adminProductsGrid" style="display:flex; flex-direction:column; gap:2rem;">
-             <!-- Products injected here -->
+
+          <!-- ── Product List ────────────────────────────────────────────────── -->
+          <div id="adminProductsGrid" style="display:flex; flex-direction:column; gap:1rem;">
+            <!-- Products injected here -->
           </div>
         </div>
 
@@ -959,6 +1068,8 @@
         const pass = document.getElementById('loginPass').value.trim();
         if (user === ADMIN_USER && pass === ADMIN_PASS) {
           sessionStorage.setItem('ADIS_admin_auth', '1');
+          // Stop the particle loop — no longer needed after login
+          if (typeof window._stopLoginParticles === 'function') window._stopLoginParticles();
           showAdmin();
         } else {
           document.getElementById('loginError').style.display = 'block';
@@ -1066,15 +1177,15 @@
         vendors: [],
         products: [],
         history: [], // Added for history tracking
-        categories: ['cap', 'shoes', 'jeans', 'tshirts', 'watches', 'sando', 'shirts', 'shorts', 'sports', 'jacket'], // Default categories
+        categories: ['Men', 'Daily Wear', 'Sneakers', 'Premium Accessories'], // Default categories
         landingConfig: null,
         landingLayout: null
       };
 
       function asArray(data) {
         if (!data) return [];
-        if (Array.isArray(data)) return data;
-        return Object.values(data);
+        if (Array.isArray(data)) return data.filter(Boolean);
+        return Object.values(data).filter(Boolean);
       }
 
       async function showAdmin() {
@@ -1091,7 +1202,7 @@
           
           // Add fallback for products, categories, and landing
           adminData.products = JSON.parse(localStorage.getItem('ADIS_products') || '[]');
-          adminData.categories = JSON.parse(localStorage.getItem('ADIS_categories') || '["cap", "shoes", "jeans", "tshirts", "watches", "sando", "shirts", "shorts", "sports", "jacket"]');
+          adminData.categories = JSON.parse(localStorage.getItem('ADIS_categories') || '["Men", "Daily Wear", "Sneakers", "Premium Accessories"]');
           adminData.landingConfig = JSON.parse(localStorage.getItem('ADIS_landingConfig') || 'null');
           adminData.history = JSON.parse(localStorage.getItem('ADIS_history') || '[]');
           adminData.living_visitors = {};
@@ -1374,24 +1485,41 @@
         const container = document.getElementById('categoryManager');
         if (!container) return;
 
+        // Ensure core categories are always present
+        const CORE_CATS = ["Men", "Daily Wear", "Sneakers", "Premium Accessories"];
+        if (!adminData.categories) adminData.categories = [];
+        CORE_CATS.forEach(c => { if (!adminData.categories.includes(c)) adminData.categories.push(c); });
+
+        // Update count badge
+        const badge = document.getElementById('productCountBadge');
+        if (badge) badge.textContent = adminData.products.length;
+
+        const catColors = ['#FFE600','#10b981','#60a5fa','#f97316','#a78bfa','#fb7185','#34d399','#fbbf24'];
         let html = `
-          <div style="background:var(--card2); padding:1rem; border-radius:8px; border:1px solid var(--border); margin-bottom:1.5rem;">
-            <h4 style="color:var(--gold); font-size:0.85rem; margin-bottom:0.75rem; letter-spacing:0.05em; text-transform:uppercase;">Manage Product Categories</h4>
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:1.25rem 1.5rem; margin-bottom:1.25rem;">
+            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem;">
+              <i class="ph ph-tag" style="color:var(--gold); font-size:1.1rem;"></i>
+              <span style="color:var(--gold); font-size:0.75rem; font-weight:800; letter-spacing:0.12em; text-transform:uppercase;">Product Categories</span>
+              <span style="background:rgba(255,230,0,0.1); color:var(--gold); font-size:0.65rem; font-weight:700; padding:0.15rem 0.5rem; border-radius:100px; border:1px solid rgba(255,230,0,0.2);">${adminData.categories.length} total</span>
+            </div>
             <div id="categoryTags" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
-              ${adminData.categories.map(cat => `
-                <div class="cat-pill" style="display:flex; align-items:center; gap:0.4rem; background:var(--card); padding:0.3rem 0.6rem; border-radius:100px; border:1px solid var(--border); font-size:0.75rem;">
+              ${adminData.categories.map((cat, ci) => `
+                <div style="display:flex; align-items:center; gap:0.4rem; background:rgba(255,255,255,0.04); padding:0.35rem 0.75rem 0.35rem 0.5rem; border-radius:100px; border:1px solid rgba(255,255,255,0.08); font-size:0.78rem; color:white; font-weight:600;">
+                  <span style="width:8px; height:8px; border-radius:50%; background:${catColors[ci % catColors.length]}; display:inline-block; flex-shrink:0;"></span>
                   <span>${cat}</span>
-                  <button onclick="removeCategory('${cat}')" style="color:#ef4444; font-weight:bold; cursor:pointer;"><i class="ph ph-x"></i></button>
+                  <button onclick="removeCategory('${cat}')" title="Remove category" style="color:#ef4444; font-size:0.75rem; cursor:pointer; line-height:1; margin-left:2px; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'"><i class="ph ph-x"></i></button>
                 </div>
               `).join('')}
+              ${adminData.categories.length === 0 ? '<span style="color:var(--muted); font-size:0.8rem; font-style:italic;">No categories yet — add one below</span>' : ''}
             </div>
-            <div style="display:flex; gap:0.5rem;">
-              <input type="text" id="newCategoryInput" placeholder="New Category Name..." style="flex:1; background:var(--card); color:white; border:1px solid var(--border); padding:0.5rem; border-radius:4px; font-size:0.8rem;">
-              <button onclick="addCategory()" class="btn btn-primary" style="padding:0.4rem 1rem; font-size:0.75rem;">Add Category</button>
+            <div style="display:flex; gap:0.6rem; align-items:center;">
+              <input type="text" id="newCategoryInput" placeholder="+ New category name (e.g. Women, Anime, Caps)" style="flex:1; background:rgba(0,0,0,0.4); color:white; border:1px solid rgba(255,255,255,0.1); padding:0.6rem 1rem; border-radius:10px; font-size:0.85rem; outline:none; transition:all 0.2s;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'" onkeydown="if(event.key==='Enter') addCategory()">
+              <button onclick="addCategory()" class="btn btn-primary" style="padding:0.6rem 1.1rem; font-size:0.82rem; display:flex; align-items:center; gap:0.4rem; white-space:nowrap;"><i class="ph ph-plus"></i> Add</button>
             </div>
           </div>
         `;
         container.innerHTML = html;
+        renderCategoryFilterBar();
       }
 
       window.addCategory = function() {
@@ -1413,13 +1541,196 @@
         renderAdminProducts();
       }
 
+      // Toggle the product edit form open/closed
+      window.toggleProductForm = function(idx, btn) {
+        const f = document.getElementById('product_form_' + idx);
+        if (!f) return;
+        const isOpen = f.style.display === 'flex';
+        f.style.display = isOpen ? 'none' : 'flex';
+        btn.innerHTML = isOpen
+          ? '<i class="ph ph-pencil-simple"></i> Edit'
+          : '<i class="ph ph-caret-up"></i> Close';
+      };
+
+      // Replicate the site's GDrive URL converter in plain JS
+      function convertGDriveUrl(url) {
+        if (!url) return url;
+        if (url.startsWith('data:')) return url;
+        if (url.includes('firebasestorage.googleapis.com')) return url;
+        if (url.includes('drive.google.com/thumbnail')) return url.replace(/sz=[^&]+/, 'sz=s3000');
+        if (url.includes('drive.usercontent.google.com/download')) return url;
+        const regs = [/\/d\/([a-zA-Z0-9_-]+)/, /[?&]id=([a-zA-Z0-9_-]+)/, /file\/d\/([a-zA-Z0-9_-]+)/];
+        for (const reg of regs) {
+          const m = url.match(reg);
+          if (m && m[1]) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=s3000';
+        }
+        if (url.includes('lh3.googleusercontent.com')) return url;
+        return url;
+      }
+
+      // Apply a GDrive (or any) link to a product image slot
+      window.applyGDriveLink = function(idx, i) {
+        const inputEl  = document.getElementById('gdrive_input_' + i + '_' + idx);
+        const statusEl = document.getElementById('p_upload_status_' + i + '_' + idx);
+        const previewEl = document.getElementById('p_preview_' + i + '_' + idx);
+        const placeholderEl = document.getElementById('p_preview_placeholder_' + i + '_' + idx);
+        const hiddenEl = document.getElementById('p_image_' + i + '_' + idx);
+        const clearBtn = document.getElementById('gdrive_clear_' + i + '_' + idx);
+
+        const raw = (inputEl.value || '').trim();
+        if (!raw) { statusEl.textContent = 'Paste a Google Drive or image link first.'; statusEl.style.color = '#ef4444'; statusEl.style.display = 'block'; return; }
+
+        const converted = convertGDriveUrl(raw);
+        statusEl.textContent = 'Checking...';
+        statusEl.style.color = 'var(--gold)';
+        statusEl.style.display = 'block';
+
+        const testImg = new Image();
+        testImg.onload = function() {
+          hiddenEl.value = converted;
+          previewEl.src = converted;
+          previewEl.style.display = 'block';
+          if (placeholderEl) placeholderEl.style.display = 'none';
+          if (clearBtn) clearBtn.style.display = 'flex';
+          inputEl.value = converted;
+          statusEl.textContent = '✓ Image set successfully!';
+          statusEl.style.color = '#10b981';
+          setTimeout(() => statusEl.style.display = 'none', 2000);
+        };
+        testImg.onerror = function() {
+          // Use directly even if CORS blocks — Drive thumbnails often block img.onload
+          hiddenEl.value = converted;
+          previewEl.src = converted;
+          previewEl.style.display = 'block';
+          if (placeholderEl) placeholderEl.style.display = 'none';
+          if (clearBtn) clearBtn.style.display = 'flex';
+          inputEl.value = converted;
+          statusEl.textContent = '✓ Link saved (preview may need save to render)';
+          statusEl.style.color = '#10b981';
+          setTimeout(() => statusEl.style.display = 'none', 2500);
+        };
+        testImg.src = converted;
+      };
+
+      window.clearImageSlot = function(idx, i) {
+        document.getElementById('p_image_' + i + '_' + idx).value = '';
+        const previewEl = document.getElementById('p_preview_' + i + '_' + idx);
+        previewEl.src = ''; previewEl.style.display = 'none';
+        const ph = document.getElementById('p_preview_placeholder_' + i + '_' + idx);
+        if (ph) ph.style.display = 'flex';
+        const inp = document.getElementById('gdrive_input_' + i + '_' + idx);
+        if (inp) inp.value = '';
+        const clearBtn = document.getElementById('gdrive_clear_' + i + '_' + idx);
+        if (clearBtn) clearBtn.style.display = 'none';
+      };
+
+      // Track how many image slots each product form currently has
+      window._imgSlotCount = {};
+
+      // Append a new blank image slot to a product's image grid
+      window.addImageSlot = function(idx) {
+        const count = (window._imgSlotCount[idx] || 0);
+        const i = count; // new slot index
+        window._imgSlotCount[idx] = count + 1;
+
+        const grid = document.getElementById('img_grid_' + idx);
+        if (!grid) return;
+
+        const slot = document.createElement('div');
+        slot.style.cssText = 'display:flex; flex-direction:column; gap:0.4rem;';
+        slot.innerHTML = `
+          <div id="slot_box_${i}_${idx}" style="position:relative; width:100%; aspect-ratio:3/4; border-radius:10px; overflow:hidden; border:2px dashed rgba(255,255,255,0.12); background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:0.3rem;">
+            <div id="p_preview_placeholder_${i}_${idx}" style="color:rgba(255,255,255,0.15); font-size:2rem; display:flex; flex-direction:column; align-items:center; gap:0.2rem;">
+              <i class="ph ph-image"></i>
+              <span style="font-size:0.55rem; letter-spacing:0.08em; text-transform:uppercase; opacity:0.5;">Image ${i+1}</span>
+            </div>
+            <img src="" id="p_preview_${i}_${idx}" referrerpolicy="no-referrer" class="preview-img" style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0; display:none;" onerror="this.style.opacity='0.3'">
+            <button id="gdrive_clear_${i}_${idx}" onclick="clearImageSlot(${idx},${i})" title="Remove" style="position:absolute; top:4px; right:4px; background:rgba(239,68,68,0.85); border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; display:none; align-items:center; justify-content:center; color:white; font-size:0.65rem; z-index:5;"><i class="ph ph-x"></i></button>
+            <div id="p_upload_status_${i}_${idx}" style="position:absolute; bottom:4px; left:50%; transform:translateX(-50%); font-size:0.6rem; font-weight:700; padding:0.25rem 0.6rem; border-radius:100px; display:none; white-space:nowrap; background:rgba(0,0,0,0.8); color:#10b981; z-index:10;"></div>
+            <input type="file" id="file_upload_${i}_${idx}" accept=".jpg,.jpeg,.png,.webp" class="file-img-upload" data-idx="${idx}" data-imgidx="${i}" style="display:none;">
+            <input type="hidden" id="p_image_${i}_${idx}" value="">
+          </div>
+          <div style="display:flex; gap:0.3rem;">
+            <input type="text" id="gdrive_input_${i}_${idx}" placeholder="Paste Drive link..." style="flex:1; min-width:0; background:rgba(0,0,0,0.5); color:white; border:1px solid rgba(255,255,255,0.1); padding:0.3rem 0.5rem; border-radius:6px; font-size:0.65rem; outline:none; transition:border 0.2s;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'" onkeydown="if(event.key==='Enter'){event.preventDefault();applyGDriveLink(${idx},${i});}">
+            <button onclick="applyGDriveLink(${idx},${i})" style="background:var(--gold); border:none; color:black; border-radius:6px; padding:0 0.4rem; font-size:0.7rem; font-weight:800; cursor:pointer; flex-shrink:0;">Set</button>
+            <button onclick="document.getElementById('file_upload_${i}_${idx}').click()" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:var(--muted); border-radius:6px; padding:0 0.4rem; font-size:0.75rem; cursor:pointer; flex-shrink:0;"><i class="ph ph-upload-simple"></i></button>
+          </div>
+        `;
+        grid.appendChild(slot);
+
+        // Wire up the file upload listener for the new slot
+        const fileInput = slot.querySelector('.file-img-upload');
+        if (fileInput) fileInput.addEventListener('change', handleFileUpload);
+      };
+
+      // Active category filter state
+      window._activeCategoryFilter = 'all';
+
+      function renderCategoryFilterBar() {
+        const bar = document.getElementById('categoryFilterBar');
+        if (!bar) return;
+
+        const cats = adminData.categories || [];
+        const active = window._activeCategoryFilter || 'all';
+        const catColors = ['#FFE600','#10b981','#60a5fa','#f97316','#a78bfa','#fb7185','#34d399','#fbbf24'];
+
+        const pillStyle = (isActive, color) => [
+          'cursor:pointer; border:none; border-radius:100px; padding:0.35rem 0.9rem;',
+          'font-size:0.75rem; font-weight:700; letter-spacing:0.04em; transition:all 0.2s;',
+          isActive
+            ? `background:${color}; color:${color === '#FFE600' ? 'black' : 'white'}; box-shadow:0 3px 12px ${color}44;`
+            : 'background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.1);'
+        ].join('');
+
+        let html = `
+          <span style="font-size:0.65rem; color:var(--muted); font-weight:700; letter-spacing:0.1em; text-transform:uppercase; margin-right:0.25rem; white-space:nowrap;">Filter:</span>
+          <button onclick="setCategoryFilter('all')" style="${pillStyle(active==='all','#FFE600')}">All <span style="opacity:0.7; font-size:0.65rem;">(${adminData.products.length})</span></button>
+        `;
+
+        cats.forEach((cat, ci) => {
+          const count = adminData.products.filter(p => (p.category || p.color) === cat).length;
+          const color = catColors[ci % catColors.length];
+          html += `<button onclick="setCategoryFilter('${cat.replace(/'/g, "\\'")}')"
+            style="${pillStyle(active === cat, color)}">${cat} <span style="opacity:0.7; font-size:0.65rem;">(${count})</span></button>`;
+        });
+
+        bar.innerHTML = html;
+      }
+
+      window.setCategoryFilter = function(cat) {
+        window._activeCategoryFilter = cat;
+        renderCategoryFilterBar();
+        const searchVal = (document.getElementById('productSearchInput') || {}).value || '';
+        filterAdminProducts(searchVal);
+      };
+
+      function filterAdminProducts(query) {
+        const q = query.toLowerCase();
+        const activeCat = window._activeCategoryFilter || 'all';
+        document.querySelectorAll('.product-edit-card').forEach(card => {
+          const title = (card.dataset.title || '').toLowerCase();
+          const cat   = (card.dataset.cat   || '').toLowerCase();
+          const matchSearch = !q || title.includes(q) || cat.includes(q);
+          const matchCat = activeCat === 'all' || cat === activeCat.toLowerCase();
+          card.style.display = (matchSearch && matchCat) ? '' : 'none';
+        });
+      }
+
       function renderAdminProducts() {
         const grid = document.getElementById('adminProductsGrid');
         if (!grid) return;
-        
+
+        // Ensure core categories are always present
+        const CORE_CATS = ["Men", "Daily Wear", "Sneakers", "Premium Accessories"];
+        if (!adminData.categories) adminData.categories = [];
+        CORE_CATS.forEach(c => { if (!adminData.categories.includes(c)) adminData.categories.push(c); });
+
+        // Refresh count badge
+        const badge = document.getElementById('productCountBadge');
+        if (badge) badge.textContent = adminData.products.length;
+
         let html = '';
         adminData.products.forEach((p, idx) => {
-          // Resolve prices from either the new rich schema or legacy simple schema
           const priceBase   = (p.prices && p.prices.base)   || (p.price ? parseInt(String(p.price).replace(/[^0-9]/g,'')) : 999);
           const priceSale   = (p.prices && p.prices.sale)   || Math.round(priceBase * 0.75);
           const priceMember = (p.prices && p.prices.member) || Math.round(priceBase * 0.6);
@@ -1427,116 +1738,192 @@
           const fandomTag   = p.fandom_tag || 'ADIS';
           const material    = (p.details && p.details.material) || p.material || '100% Cotton';
           const gsm         = (p.details && p.details.gsm)      || p.gsm      || '220 GSM';
+          const thumbSrc    = (p.images && p.images[0]) || p.image || '';
           html += `
-            <div class="product-edit-card" draggable="true" data-idx="${idx}" style="background:var(--card); border:1px solid var(--border); border-radius:12px; margin-bottom:1.5rem; overflow:hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
-              <div style="background:var(--card2); padding:1rem 1.5rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-                <div style="display:flex; align-items:center; gap:1rem;">
-                  <div class="drag-handle" title="Drag to reorder" style="cursor:grab; font-size:1.5rem; color:var(--muted);"><i class="ph ph-dots-six-vertical"></i></div>
-                  <div style="font-size:0.8rem; color:var(--gold); font-weight:600; letter-spacing:0.05em;">PRODUCT #${p.id}</div>
+            <div class="product-edit-card" draggable="true" data-idx="${idx}" data-title="${(p.title||'').replace(/"/g,'')}"
+              data-cat="${(p.category||p.color||'').replace(/"/g,'')}" 
+              style="background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.2); transition:all 0.2s ease;"
+              onmouseover="this.style.borderColor='rgba(255,230,0,0.25)'; this.style.boxShadow='0 8px 32px rgba(0,0,0,0.35)'"
+              onmouseout="this.style.borderColor='var(--border)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.2)'">
+
+              <!-- ── Row Header ─── -->
+              <div style="background:rgba(255,255,255,0.025); padding:0.9rem 1.25rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+
+                <!-- Drag handle + position number -->
+                <div style="display:flex; align-items:center; gap:0.5rem; color:var(--muted);">
+                  <div class="drag-handle" title="Drag to reorder" style="cursor:grab; font-size:1.3rem;"><i class="ph ph-dots-six-vertical"></i></div>
+                  <span style="background:rgba(255,255,255,0.06); color:var(--muted); font-size:0.7rem; font-weight:700; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;">#${idx+1}</span>
                 </div>
-                <div style="display:flex; gap:0.5rem; align-items:center;">
-                  <button class="btn btn-outline btn-move-up" data-idx="${idx}" title="Move Up" style="padding:0.4rem; font-size:1rem;"><i class="ph ph-caret-up"></i></button>
-                  <button class="btn btn-outline btn-move-down" data-idx="${idx}" title="Move Down" style="padding:0.4rem; font-size:1rem;"><i class="ph ph-caret-down"></i></button>
-                  <button class="btn btn-outline btn-del-product" data-idx="${idx}" title="Delete Product" style="padding:0.4rem; font-size:1rem; border-color:#ef4444; color:#ef4444;"><i class="ph ph-trash"></i></button>
+
+                <!-- Thumbnail -->
+                <div style="width:52px; height:66px; border-radius:8px; overflow:hidden; background:#111; border:1px solid rgba(255,255,255,0.08); flex-shrink:0;">
+                  <img src="${thumbSrc}" onerror="this.src='/images/inafa-logo.png'" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+
+                <!-- Name + meta -->
+                <div style="flex:1; min-width:140px;">
+                  <div style="color:var(--white); font-size:0.95rem; font-weight:700; margin-bottom:0.3rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px;">${p.title || 'Untitled Product'}</div>
+                  <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                    <span style="font-size:0.65rem; color:var(--gold); border:1px solid rgba(255,230,0,0.4); padding:0.12rem 0.55rem; border-radius:100px; font-weight:700; text-transform:uppercase;">${p.category || p.color || 'Uncategorized'}</span>
+                    <span style="font-size:0.75rem; color:var(--muted);">₹${priceBase} base</span>
+                    <span style="font-size:0.75rem; color:#10b981;">₹${priceSale} sale</span>
+                    <span style="font-size:0.7rem; color:var(--muted); opacity:0.6;">${fitType}</span>
+                  </div>
+                </div>
+
+                <!-- View count -->
+                <div style="text-align:center; padding:0 0.75rem; border-left:1px solid rgba(255,255,255,0.06); border-right:1px solid rgba(255,255,255,0.06);">
+                  <div style="color:var(--gold); font-size:1rem; font-weight:800;">${p.views || 0}</div>
+                  <div style="color:var(--muted); font-size:0.6rem; text-transform:uppercase; letter-spacing:0.08em;">Views</div>
+                </div>
+
+                <!-- Actions -->
+                <div style="display:flex; gap:0.4rem; align-items:center;">
+                  <button title="Edit product" onclick="toggleProductForm(${idx}, this)" style="background:rgba(255,230,0,0.1); border:1px solid rgba(255,230,0,0.3); color:var(--gold); padding:0.45rem 0.9rem; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:0.35rem; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,230,0,0.2)'" onmouseout="this.style.background='rgba(255,230,0,0.1)'"><i class="ph ph-pencil-simple"></i> Edit</button>
+                  <button class="btn-move-up" data-idx="${idx}" title="Move up" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color:var(--muted); width:32px; height:32px; border-radius:7px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition:all 0.2s;" onmouseover="this.style.color='white'; this.style.borderColor='rgba(255,255,255,0.3)'" onmouseout="this.style.color='var(--muted)'; this.style.borderColor='rgba(255,255,255,0.08)'"><i class="ph ph-caret-up"></i></button>
+                  <button class="btn-move-down" data-idx="${idx}" title="Move down" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color:var(--muted); width:32px; height:32px; border-radius:7px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition:all 0.2s;" onmouseover="this.style.color='white'; this.style.borderColor='rgba(255,255,255,0.3)'" onmouseout="this.style.color='var(--muted)'; this.style.borderColor='rgba(255,255,255,0.08)'"><i class="ph ph-caret-down"></i></button>
+                  <button class="btn-del-product" data-idx="${idx}" title="Delete product" style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); color:#ef4444; width:32px; height:32px; border-radius:7px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(239,68,68,0.08)'"><i class="ph ph-trash"></i></button>
                 </div>
               </div>
 
-              <div style="padding:1.5rem; display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:2.5rem;">
+              <!-- ── Expandable Edit Form ─── -->
+              <div id="product_form_${idx}" style="display:none; padding:1.5rem; flex-wrap:wrap; gap:2rem; background:rgba(0,0,0,0.25); border-top:1px solid rgba(255,255,255,0.05);">
                 
                 <!-- Left Column: Details -->
-                <div style="display:flex; flex-direction:column; gap:1.2rem;">
+                <div style="flex: 1; min-width: 280px; display:flex; flex-direction:column; gap:1.2rem;">
                   <div>
-                    <label style="display:block; font-size:0.7rem; color:var(--muted); margin-bottom:0.4rem; letter-spacing:0.05em;">PRODUCT TITLE</label>
-                    <input type="text" id="p_title_${idx}" value="${p.title}" placeholder="e.g. Premium Oversized Tee" style="width:100%; background:var(--bg); color:white; border:1px solid var(--border); padding:0.8rem; border-radius:6px; font-size:0.9rem;">
+                    <label style="display:block; font-size:0.65rem; color:var(--gold); margin-bottom:0.4rem; letter-spacing:0.15em; text-transform:uppercase; font-weight:700;">Product Title</label>
+                    <input type="text" id="p_title_${idx}" value="${p.title}" placeholder="e.g. Premium Oversized Tee" style="width:100%; background:rgba(0,0,0,0.5); color:white; border:1px solid rgba(255,255,255,0.08); padding:0.75rem 1rem; border-radius:10px; font-size:1rem; outline:none; transition:all 0.3s ease;" onfocus="this.style.borderColor='var(--gold)'; this.style.backgroundColor='rgba(0,0,0,0.8)'; this.style.boxShadow='0 0 0 3px rgba(255,215,0,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'; this.style.backgroundColor='rgba(0,0,0,0.5)'; this.style.boxShadow='none'">
                   </div>
 
-                  <div style="display:flex; gap:1rem;">
+                  <div style="display:flex; gap:1.5rem;">
                     <div style="flex:1;">
-                      <label style="display:block; font-size:0.7rem; color:var(--muted); margin-bottom:0.4rem; letter-spacing:0.05em;">CATEGORY</label>
-                      <select id="p_category_${idx}" style="width:100%; background:var(--bg); color:white; border:1px solid var(--border); padding:0.8rem; border-radius:6px; font-size:0.9rem;">
+                      <label style="display:block; font-size:0.65rem; color:var(--gold); margin-bottom:0.4rem; letter-spacing:0.15em; text-transform:uppercase; font-weight:700;">Category</label>
+                      <select id="p_category_${idx}" style="width:100%; background:rgba(0,0,0,0.5); color:white; border:1px solid rgba(255,255,255,0.08); padding:0.75rem 1rem; border-radius:10px; font-size:1rem; outline:none; transition:all 0.3s ease; cursor:pointer;" onfocus="this.style.borderColor='var(--gold)'; this.style.boxShadow='0 0 0 3px rgba(255,215,0,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'; this.style.boxShadow='none'">
                         ${adminData.categories.map(cat => `<option value="${cat}" ${p.category === cat || p.color === cat ? 'selected' : ''}>${cat}</option>`).join('')}
                         ${(p.category && !adminData.categories.includes(p.category)) ? `<option value="${p.category}" selected>${p.category}</option>` : ''}
                         ${(!p.category && p.color && !adminData.categories.includes(p.color)) ? `<option value="${p.color}" selected>${p.color}</option>` : ''}
                       </select>
                     </div>
                     <div style="flex:1;">
-                      <label style="display:block; font-size:0.7rem; color:var(--muted); margin-bottom:0.4rem; letter-spacing:0.05em;">FIT TYPE</label>
-                      <select id="p_fit_${idx}" style="width:100%; background:var(--bg); color:white; border:1px solid var(--border); padding:0.8rem; border-radius:6px; font-size:0.9rem;">
+                      <label style="display:block; font-size:0.65rem; color:var(--gold); margin-bottom:0.4rem; letter-spacing:0.15em; text-transform:uppercase; font-weight:700;">Fit Type</label>
+                      <select id="p_fit_${idx}" style="width:100%; background:rgba(0,0,0,0.5); color:white; border:1px solid rgba(255,255,255,0.08); padding:0.75rem 1rem; border-radius:10px; font-size:1rem; outline:none; transition:all 0.3s ease; cursor:pointer;" onfocus="this.style.borderColor='var(--gold)'; this.style.boxShadow='0 0 0 3px rgba(255,215,0,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'; this.style.boxShadow='none'">
                         ${['Regular','Oversized','Slim'].map(f => `<option value="${f}" ${fitType===f?'selected':''}>${f}</option>`).join('')}
                       </select>
                     </div>
                   </div>
 
                   <div>
-                    <label style="display:block; font-size:0.7rem; color:var(--muted); margin-bottom:0.4rem; letter-spacing:0.05em;">PRICING (₹)</label>
-                    <div style="display:flex; gap:1rem; background:rgba(0,0,0,0.2); padding:1rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
+                    <label style="display:block; font-size:0.65rem; color:var(--gold); margin-bottom:0.4rem; letter-spacing:0.15em; text-transform:uppercase; font-weight:700;">Pricing (₹)</label>
+                    <div style="display:flex; gap:0.8rem; background:rgba(255,255,255,0.02); padding:1rem; border-radius:12px; border:1px solid rgba(255,255,255,0.04); box-shadow:inset 0 4px 15px rgba(0,0,0,0.3);">
                       <div style="flex:1;">
-                        <input type="number" id="p_base_${idx}" value="${priceBase}" placeholder="Base" style="width:100%; background:var(--bg); color:white; border:1px solid var(--border); padding:0.6rem; border-radius:4px; font-size:0.85rem;">
-                        <div style="font-size:0.6rem; color:var(--muted); text-align:center; margin-top:4px;">BASE PRICE</div>
+                        <input type="number" id="p_base_${idx}" value="${priceBase}" placeholder="Base" style="width:100%; background:rgba(0,0,0,0.6); color:white; border:1px solid rgba(255,255,255,0.1); padding:0.7rem; border-radius:6px; font-size:0.95rem; outline:none; transition:all 0.3s ease;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+                        <div style="font-size:0.65rem; color:var(--muted); text-align:center; margin-top:8px; letter-spacing:0.1em; font-weight:600;">BASE PRICE</div>
                       </div>
                       <div style="flex:1;">
-                        <input type="number" id="p_sale_${idx}" value="${priceSale}" placeholder="Sale" style="width:100%; background:var(--bg); color:#FFE600; border:1px solid rgba(255,230,0,0.3); padding:0.6rem; border-radius:4px; font-size:0.85rem;">
-                        <div style="font-size:0.6rem; color:#FFE600; text-align:center; margin-top:4px; opacity:0.8;">SALE PRICE</div>
+                        <input type="number" id="p_sale_${idx}" value="${priceSale}" placeholder="Sale" style="width:100%; background:rgba(255,230,0,0.05); color:#FFE600; border:1px solid rgba(255,230,0,0.3); padding:0.7rem; border-radius:6px; font-size:0.95rem; outline:none; transition:all 0.3s ease;" onfocus="this.style.borderColor='#FFE600'; this.style.boxShadow='0 0 10px rgba(255,230,0,0.2)'" onblur="this.style.borderColor='rgba(255,230,0,0.3)'; this.style.boxShadow='none'">
+                        <div style="font-size:0.65rem; color:#FFE600; text-align:center; margin-top:8px; opacity:0.9; letter-spacing:0.1em; font-weight:600;">SALE PRICE</div>
                       </div>
                       <div style="flex:1;">
-                        <input type="number" id="p_member_${idx}" value="${priceMember}" placeholder="Member" style="width:100%; background:var(--bg); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:0.6rem; border-radius:4px; font-size:0.85rem;">
-                        <div style="font-size:0.6rem; color:#10b981; text-align:center; margin-top:4px; opacity:0.8;">MEMBER PRICE</div>
+                        <input type="number" id="p_member_${idx}" value="${priceMember}" placeholder="Member" style="width:100%; background:rgba(16,185,129,0.05); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:0.7rem; border-radius:6px; font-size:0.95rem; outline:none; transition:all 0.3s ease;" onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 10px rgba(16,185,129,0.2)'" onblur="this.style.borderColor='rgba(16,185,129,0.3)'; this.style.boxShadow='none'">
+                        <div style="font-size:0.65rem; color:#10b981; text-align:center; margin-top:8px; opacity:0.9; letter-spacing:0.1em; font-weight:600;">MEMBER PRICE</div>
                       </div>
                     </div>
                   </div>
 
-                  <div style="display:flex; gap:1rem;">
+                  <div style="display:flex; gap:1.5rem;">
                     <div style="flex:1;">
-                      <label style="font-size:0.7rem; color:var(--muted); display:block; margin-bottom:0.4rem; letter-spacing:0.05em;">MATERIAL</label>
-                      <input type="text" id="p_material_${idx}" value="${material}" placeholder="e.g. 100% Cotton" style="width:100%; background:var(--bg); color:white; border:1px solid var(--border); padding:0.8rem; border-radius:6px; font-size:0.9rem;">
+                      <label style="display:block; font-size:0.65rem; color:var(--gold); margin-bottom:0.4rem; letter-spacing:0.15em; text-transform:uppercase; font-weight:700;">Material</label>
+                      <input type="text" id="p_material_${idx}" value="${material}" placeholder="e.g. 100% Cotton" style="width:100%; background:rgba(0,0,0,0.5); color:white; border:1px solid rgba(255,255,255,0.08); padding:0.75rem 1rem; border-radius:10px; font-size:1rem; outline:none; transition:all 0.3s ease;" onfocus="this.style.borderColor='var(--gold)'; this.style.boxShadow='0 0 0 3px rgba(255,215,0,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'; this.style.boxShadow='none'">
                     </div>
                     <div style="flex:1;">
-                      <label style="font-size:0.7rem; color:var(--muted); display:block; margin-bottom:0.4rem; letter-spacing:0.05em;">GSM</label>
-                      <input type="text" id="p_gsm_${idx}" value="${gsm}" placeholder="220 GSM" style="width:100%; background:var(--bg); color:white; border:1px solid var(--border); padding:0.8rem; border-radius:6px; font-size:0.9rem;">
+                      <label style="display:block; font-size:0.65rem; color:var(--gold); margin-bottom:0.4rem; letter-spacing:0.15em; text-transform:uppercase; font-weight:700;">GSM</label>
+                      <input type="text" id="p_gsm_${idx}" value="${gsm}" placeholder="220 GSM" style="width:100%; background:rgba(0,0,0,0.5); color:white; border:1px solid rgba(255,255,255,0.08); padding:0.75rem 1rem; border-radius:10px; font-size:1rem; outline:none; transition:all 0.3s ease;" onfocus="this.style.borderColor='var(--gold)'; this.style.boxShadow='0 0 0 3px rgba(255,215,0,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'; this.style.boxShadow='none'">
                     </div>
                     <div style="flex:1;">
-                      <label style="font-size:0.7rem; color:var(--muted); display:block; margin-bottom:0.4rem; letter-spacing:0.05em;">FANDOM</label>
-                      <input type="text" id="p_fandom_${idx}" value="${fandomTag}" placeholder="e.g. ADIS" style="width:100%; background:var(--bg); color:white; border:1px solid var(--border); padding:0.8rem; border-radius:6px; font-size:0.9rem;">
+                      <label style="display:block; font-size:0.65rem; color:var(--gold); margin-bottom:0.4rem; letter-spacing:0.15em; text-transform:uppercase; font-weight:700;">Fandom</label>
+                      <input type="text" id="p_fandom_${idx}" value="${fandomTag}" placeholder="e.g. ADIS" style="width:100%; background:rgba(0,0,0,0.5); color:white; border:1px solid rgba(255,255,255,0.08); padding:0.75rem 1rem; border-radius:10px; font-size:1rem; outline:none; transition:all 0.3s ease;" onfocus="this.style.borderColor='var(--gold)'; this.style.boxShadow='0 0 0 3px rgba(255,215,0,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'; this.style.boxShadow='none'">
                     </div>
                   </div>
 
                   <div>
-                    <label style="display:block; font-size:0.7rem; color:var(--muted); margin-bottom:0.4rem; letter-spacing:0.05em;">DESCRIPTION</label>
-                    <textarea id="p_desc_${idx}" placeholder="Write a compelling product description..." style="width:100%; background:var(--bg); color:white; border:1px solid var(--border); padding:0.8rem; border-radius:6px; min-height:100px; font-size:0.9rem; font-family:inherit;">${p.desc || ''}</textarea>
+                    <label style="display:block; font-size:0.65rem; color:var(--gold); margin-bottom:0.4rem; letter-spacing:0.15em; text-transform:uppercase; font-weight:700;">Description</label>
+                    <textarea id="p_desc_${idx}" placeholder="Write a compelling product description..." style="width:100%; background:rgba(0,0,0,0.5); color:white; border:1px solid rgba(255,255,255,0.08); padding:0.8rem 1rem; border-radius:8px; min-height:80px; font-size:1rem; font-family:inherit; outline:none; transition:all 0.3s ease; resize:vertical; line-height:1.5;" onfocus="this.style.borderColor='var(--gold)'; this.style.backgroundColor='rgba(0,0,0,0.8)'; this.style.boxShadow='0 0 0 3px rgba(255,215,0,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'; this.style.backgroundColor='rgba(0,0,0,0.5)'; this.style.boxShadow='none'">${p.desc || ''}</textarea>
                   </div>
                 </div>
 
                 <!-- Right Column: Images & Action -->
-                <div style="display:flex; flex-direction:column; justify-content:space-between;">
+                <div style="flex: 1; min-width: 280px; display:flex; flex-direction:column; justify-content:space-between; gap:1.5rem;">
                   <div>
-                    <label style="display:block; font-size:0.7rem; color:var(--muted); margin-bottom:0.8rem; letter-spacing:0.05em;">PRODUCT MEDIA (Click to upload) — <span style="color:var(--gold); text-transform:none;">Recommended: 900x1200 px (3:4 ratio)</span></label>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
-                      ${[0,1,2,3].map(i => `
-                        <div style="position:relative; width:100%; aspect-ratio:3/4; border-radius:8px; overflow:hidden; border:2px dashed var(--border); background:var(--bg); display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="document.getElementById('file_upload_${i}_${idx}').click()">
-                          ${((p.images && p.images[i]) || (i===0 && p.image)) 
-                            ? `<img src="${(p.images && p.images[i]) || (i===0 ? p.image : '')}" id="p_preview_${i}_${idx}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='/images/inafa-logo.png'">`
-                            : `<div id="p_preview_placeholder_${i}_${idx}" style="color:var(--border); font-size:2rem;"><i class="ph ph-image"></i></div>
-                               <img src="" id="p_preview_${i}_${idx}" style="width:100%; height:100%; object-fit:cover; display:none;">`
-                          }
-                          <div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); opacity:0; transition:opacity 0.2s; display:flex; align-items:center; justify-content:center; color:white; font-size:2rem;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0"><i class="ph ph-upload-simple"></i></div>
-                          <input type="hidden" id="p_image_${i}_${idx}" value="${(p.images && p.images[i]) || (i===0 ? p.image : '')}">
-                          <input type="file" id="file_upload_${i}_${idx}" accept=".jpg,.jpeg" class="file-img-upload" data-idx="${idx}" data-imgidx="${i}" style="display:none;">
-                          <div id="p_upload_status_${i}_${idx}" style="position:absolute; bottom:0.5rem; left:50%; transform:translateX(-50%); font-size:0.65rem; background:var(--card); color:var(--gold); padding:0.4rem 0.8rem; border-radius:100px; display:none; white-space:nowrap; box-shadow:0 4px 12px rgba(0,0,0,0.5);">Uploading...</div>
-                        </div>
-                      `).join('')}
-                    </div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem;">
+                       <label style="display:block; font-size:0.65rem; color:var(--gold); letter-spacing:0.15em; text-transform:uppercase; font-weight:700; margin:0;">Product Images <span style="color:var(--muted); font-weight:400; font-size:0.6rem; margin-left:0.4rem;">unlimited slots (Recommended size: 800x1067, 3:4 ratio)</span></label>
+                       <span style="color:var(--muted); font-size:0.65rem;">Paste GDrive link below each slot &amp; click Set</span>
+                     </div>
+
+                     <!-- Dynamic image grid -->
+                     <div id="img_grid_${idx}" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:0.75rem; margin-bottom:0.75rem;">
+                       ${(() => {
+                         const initialImgs = (p.images && p.images.length > 0) ? p.images : (p.image ? [p.image] : []);
+                         // Always show at least 4 slots
+                         const slotCount = Math.max(4, initialImgs.length);
+                         window._imgSlotCount = window._imgSlotCount || {};
+                         window._imgSlotCount[idx] = slotCount;
+                         return Array.from({length: slotCount}, (_, i) => {
+                           const existingUrl = initialImgs[i] || '';
+                           const hasImg = !!existingUrl;
+                           return `
+                           <div style="display:flex; flex-direction:column; gap:0.4rem;">
+                             <div id="slot_box_${i}_${idx}" style="position:relative; width:100%; aspect-ratio:3/4; border-radius:10px; overflow:hidden; border:2px dashed ${hasImg ? 'rgba(255,230,0,0.4)' : 'rgba(255,255,255,0.12)'}; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:0.3rem;">
+                               <div id="p_preview_placeholder_${i}_${idx}" style="color:rgba(255,255,255,0.15); font-size:2rem; display:${hasImg ? 'none' : 'flex'}; flex-direction:column; align-items:center; gap:0.2rem;">
+                                 <i class="ph ph-image"></i>
+                                 <span style="font-size:0.55rem; letter-spacing:0.08em; text-transform:uppercase; opacity:0.5;">Image ${i+1}</span>
+                               </div>
+                               <img src="${existingUrl}" id="p_preview_${i}_${idx}" referrerpolicy="no-referrer" class="preview-img" style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0; display:${hasImg ? 'block' : 'none'};" onerror="this.style.opacity='0.3'">
+                               <button id="gdrive_clear_${i}_${idx}" onclick="clearImageSlot(${idx},${i})" title="Remove image" style="position:absolute; top:4px; right:4px; background:rgba(239,68,68,0.85); border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; display:${hasImg ? 'flex' : 'none'}; align-items:center; justify-content:center; color:white; font-size:0.65rem; z-index:5;"><i class="ph ph-x"></i></button>
+                               <div id="p_upload_status_${i}_${idx}" style="position:absolute; bottom:4px; left:50%; transform:translateX(-50%); font-size:0.6rem; font-weight:700; padding:0.25rem 0.6rem; border-radius:100px; display:none; white-space:nowrap; background:rgba(0,0,0,0.8); color:#10b981; z-index:10;"></div>
+                               <input type="file" id="file_upload_${i}_${idx}" accept=".jpg,.jpeg,.png,.webp" class="file-img-upload" data-idx="${idx}" data-imgidx="${i}" style="display:none;">
+                               <input type="hidden" id="p_image_${i}_${idx}" value="${existingUrl}">
+                             </div>
+                             <div style="display:flex; gap:0.3rem;">
+                               <input type="text" id="gdrive_input_${i}_${idx}" placeholder="Paste Drive link..." value="${existingUrl}" style="flex:1; min-width:0; background:rgba(0,0,0,0.5); color:white; border:1px solid rgba(255,255,255,0.1); padding:0.3rem 0.5rem; border-radius:6px; font-size:0.65rem; outline:none; transition:border 0.2s;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'" onkeydown="if(event.key==='Enter'){event.preventDefault();applyGDriveLink(${idx},${i});}">  
+                               <button onclick="applyGDriveLink(${idx},${i})" style="background:var(--gold); border:none; color:black; border-radius:6px; padding:0 0.4rem; font-size:0.7rem; font-weight:800; cursor:pointer; flex-shrink:0;">Set</button>
+                               <button onclick="document.getElementById('file_upload_${i}_${idx}').click()" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:var(--muted); border-radius:6px; padding:0 0.4rem; font-size:0.75rem; cursor:pointer; flex-shrink:0;"><i class="ph ph-upload-simple"></i></button>
+                             </div>
+                           </div>
+                           `;
+                         }).join('');
+                       })()}
+                     </div>
+
+                     <!-- Add more images button -->
+                     <button onclick="addImageSlot(${idx})" style="width:100%; padding:0.55rem; background:rgba(255,255,255,0.03); border:2px dashed rgba(255,255,255,0.12); border-radius:10px; color:var(--muted); font-size:0.8rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.5rem; margin-bottom:0.75rem; transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(255,230,0,0.4)'; this.style.color='var(--gold)'; this.style.background='rgba(255,230,0,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.color='var(--muted)'; this.style.background='rgba(255,255,255,0.03)'">
+                       <i class="ph ph-plus-circle" style="font-size:1.1rem;"></i> Add Another Image Slot
+                     </button>
+
+                     <!-- Helper tip -->
+                     <div style="background:rgba(255,230,0,0.04); border:1px solid rgba(255,230,0,0.12); border-radius:8px; padding:0.6rem 0.8rem; display:flex; align-items:flex-start; gap:0.5rem;">
+                       <i class="ph ph-info" style="color:var(--gold); font-size:0.9rem; flex-shrink:0; margin-top:1px;"></i>
+                       <div style="font-size:0.7rem; color:var(--muted); line-height:1.5;">
+                         <strong style="color:var(--white);">Google Drive:</strong> Share image → Anyone with link → Copy link → Paste &amp; click <strong style="color:var(--gold);">Set</strong>. Add unlimited slots with the button above.
+                       </div>
+                     </div>
+                     <div style="font-size:0.7rem; color:var(--muted); line-height:1.5;">
+                         <strong style="color:var(--white);">How to get a Google Drive link:</strong> Open image in Drive → Share → Anyone with link can view → Copy link → Paste above &amp; click <strong style="color:var(--gold);">Set</strong>.<br>
+                         <strong style="color:var(--white);">Recommended Image Size:</strong> 800&times;1067 px (3:4 Ratio) for the best fit on the site.
+                       </div>
+                     </div>
                   </div>
                   
-                  <div style="margin-top:2rem;">
-                    <div style="font-size:0.8rem; color:var(--muted); margin-bottom:1rem; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.02); padding:0.8rem 1rem; border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
-                      <span><i class="ph ph-eye"></i> Lifetime Views</span>
-                      <strong style="color:var(--gold); font-size:1rem;">${p.views || 0}</strong>
+                  <div style="margin-top:auto;">
+                    <div style="font-size:0.9rem; color:var(--muted); margin-bottom:1.5rem; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.03); padding:1rem 1.2rem; border-radius:10px; border:1px solid rgba(255,255,255,0.06); box-shadow:inset 0 2px 10px rgba(0,0,0,0.1);">
+                      <span style="display:flex; align-items:center; gap:0.6rem; font-weight:600;"><i class="ph ph-eye" style="font-size:1.2rem; color:var(--gold);"></i> LIFETIME VIEWS</span>
+                      <strong style="color:var(--gold); font-size:1.3rem; letter-spacing:0.05em;">${p.views || 0}</strong>
                     </div>
-                    <button class="btn btn-primary btn-save-product" data-idx="${idx}" style="width:100%; padding:1rem; font-size:1rem; letter-spacing:0.05em; border-radius:8px; display:flex; justify-content:center; gap:0.5rem;"><i class="ph ph-floppy-disk"></i> SAVE PRODUCT UPDATES</button>
+                    <button class="btn btn-save-product" data-idx="${idx}" style="width:100%; padding:1rem; font-size:0.95rem; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; border-radius:10px; background:linear-gradient(90deg, #d4af37, #ffd700); color:black; border:none; display:flex; justify-content:center; align-items:center; gap:0.6rem; box-shadow:0 6px 20px rgba(255,215,0,0.25); transition:all 0.3s ease; cursor:pointer;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 25px rgba(255,215,0,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 20px rgba(255,215,0,0.25)'"><i class="ph ph-floppy-disk" style="font-size:1.3rem;"></i> Save Product Updates</button>
                   </div>
                 </div>
 
-              </div>
+              </div>      </div>
             </div>
           `;
         });
@@ -1544,14 +1931,18 @@
 
         grid.querySelectorAll('.btn-save-product').forEach(btn => {
            btn.addEventListener('click', (e) => {
-               const idx = parseInt(e.target.dataset.idx);
+               const idx = parseInt(btn.dataset.idx);
                const existing = adminData.products[idx];
                
-               // Collect non-empty images
+               // Collect ALL image slots (scan all p_image_*_idx hidden inputs for this product)
                let imgs = [];
-               for(let i=0; i<4; i++){
-                  const val = document.getElementById(`p_image_${i}_${idx}`).value;
-                  if(val && val.trim() !== '') imgs.push(val);
+               const slotCount = window._imgSlotCount[idx] || 4;
+               for (let i = 0; i < slotCount; i++) {
+                  const el = document.getElementById('p_image_' + i + '_' + idx);
+                  if (el) {
+                    const val = el.value;
+                    if (val && val.trim() !== '') imgs.push(val.trim());
+                  }
                }
                
                if(imgs.length === 0) return alert('You must provide at least 1 image for the product.');
@@ -1592,6 +1983,7 @@
                };
                syncProductsToFirebase();
                logProductToHistory(adminData.products[idx]);
+               renderAdminProducts();
            });
         });
 
@@ -1639,7 +2031,7 @@
                    await logProductToHistory(productToDelete);
                    adminData.products.splice(idx, 1);
                    syncProductsToFirebase();
-                   showToast(`"${productToDelete.title}" deleted and saved to History.`);
+                   alert(`"${productToDelete.title}" deleted and saved to History.`);
                }
            });
         });
@@ -1694,6 +2086,10 @@
               }
            });
         });
+        
+        // Re-apply filters after re-rendering the list
+        const searchVal = (document.getElementById('productSearchInput') || {}).value || '';
+        filterAdminProducts(searchVal);
       }
 
       function renderAdminHistory() {
@@ -1753,7 +2149,7 @@
                views: 0 // Reset views or keep? Resetting seems logical for a "new" republish
             });
             syncProductsToFirebase();
-            showToast(`Restored "${item.title}" successfully!`);
+            alert(`Restored "${item.title}" successfully!`);
          }
       }
 
@@ -1782,6 +2178,7 @@
          adminData.products.unshift(newProduct);
          syncProductsToFirebase();
          logProductToHistory(newProduct);
+         renderAdminProducts(); // Ensure the UI updates immediately
       });
 
       document.getElementById('btnResetViews')?.addEventListener('click', async () => {
@@ -1914,10 +2311,7 @@
           document.getElementById(`tab-${tab}`)?.classList.add('active');
           document.querySelector('.admin-header h1').textContent = tab.charAt(0).toUpperCase() + tab.slice(1);
           
-          const tChart = document.getElementById('trafficChart');
-          if (tChart) {
-            tChart.style.display = (tab === 'dashboard' || tab === 'insights') ? 'block' : 'none';
-          }
+
           
           // Close mobile sidebar if open
           const sidebar = document.getElementById('adminSidebar');
@@ -2996,7 +3390,7 @@
 
         grid.querySelectorAll('.btn-save-landing').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const k = e.target.dataset.key;
+                const k = btn.dataset.key;
                 const rawVal = document.getElementById(`l_drive_link_${k}`).value.trim();
                 const hiddenVal = document.getElementById(`l_image_${k}`).value.trim();
                 if (rawVal) {
@@ -3012,7 +3406,7 @@
 
         grid.querySelectorAll('.btn-save-text').forEach(btn => {
            btn.addEventListener('click', (e) => {
-               const k = e.target.dataset.key;
+               const k = btn.dataset.key;
                adminData.landingConfig[k] = document.getElementById(`l_text_${k}`).value.trim();
                syncLandingToFirebase();
                alert("Text updated and saved!");
@@ -3458,7 +3852,7 @@
       window.restoreLocalUpdates = function() {
           if (confirm("This will load your browser's local unsaved updates and sync them to the Cloud. Do you want to proceed?")) {
               adminData.products = JSON.parse(localStorage.getItem('ADIS_products') || '[]');
-              adminData.categories = JSON.parse(localStorage.getItem('ADIS_categories') || '["cap", "shoes", "jeans", "tshirts", "watches", "sando", "shirts", "shorts", "sports", "jacket"]');
+              adminData.categories = JSON.parse(localStorage.getItem('ADIS_categories') || '["Men", "Daily Wear", "Sneakers", "Premium Accessories"]');
               adminData.landingConfig = JSON.parse(localStorage.getItem('ADIS_landingConfig') || 'null');
               adminData.feeds = JSON.parse(localStorage.getItem('ADIS_feeds') || '[]');
               import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js').then(({ set, ref }) => {

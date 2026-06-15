@@ -22,6 +22,7 @@ export default function MenPage() {
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
+      if (p.category && p.category.toLowerCase() !== 'men') return false;
       if (filters.sizes.length > 0) {
         const hasSize = p.variants.some(
           (v) => filters.sizes.includes(v.size) && v.stock > 0

@@ -4,6 +4,7 @@ import "./globals.css";
 import CustomCursor from "@/components/CustomCursor";
 import ThreeBackground from "@/components/ThreeBackground";
 import PageLoader from "@/components/PageLoader";
+import ImagePreloader from "@/components/ImagePreloader";
 import LeadCatcher from "@/components/LeadCatcher";
 import FirebaseProvider from "@/components/FirebaseProvider";
 import BackgroundMusic from "@/components/BackgroundMusic";
@@ -37,6 +38,8 @@ export default function RootLayout({
         {/* FirebaseProvider syncs products & landing config from Firebase into the Zustand store */}
         <FirebaseProvider>
           <AnalyticsTracker />
+          {/* ImagePreloader silently fetches all Drive images into cache during the loader */}
+          <ImagePreloader />
           <PageLoader />
           <ThreeBackground />
           <CustomCursor />

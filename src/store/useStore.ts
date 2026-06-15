@@ -12,7 +12,7 @@ export interface Lead {
   visitorId?: string;
 }
 
-const MOCK_PRODUCTS: Product[] = [
+export const MOCK_PRODUCTS: Product[] = [
   {
     id: 'marvel-logo-tee',
     title: 'Marvel Logo Oversized Tee',
