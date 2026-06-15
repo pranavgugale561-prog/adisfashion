@@ -2,7 +2,7 @@
 
 import { useStore } from '@/store/useStore';
 import { getFirebaseDB } from '@/lib/firebase';
-import { ref, get, set } from 'firebase/database';
+import { ref, get, set, onValue } from 'firebase/database';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, MessageSquare, Send, Bot, ShoppingBag, Globe,
@@ -164,14 +164,54 @@ export default function ChatWidget() {
   }, [isChatOpen, resetIdleTimer]);
 
   // ── Helper: push bot message ────────────────────────────────────────────────
-  const pushBotMessage = (response: BotResponse) => {
+  const pushBotMessage = useCallback((response: BotResponse) => {
     setMessages(prev => [...prev, {
       id: `bot-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       role: 'assistant',
       response,
     }]);
     if (!isChatOpen) setUnreadCount(c => c + 1);
-  };
+  }, [isChatOpen]);
+
+  // ── Listen for Admin Messages ───────────────────────────────────────────────
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const vid = localStorage.getItem('ADIS_visitorId');
+    if (!vid) return;
+
+    let unsubscribe: (() => void) | undefined;
+
+    const setupListener = async () => {
+      try {
+        const db = await getFirebaseDB();
+        if (!db) return;
+        
+        const msgRef = ref(db, `user_messages/${vid}/latest`);
+        unsubscribe = onValue(msgRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data && data.text && data.timestamp) {
+            const lastMsgTime = sessionStorage.getItem('last_admin_msg_time');
+            if (lastMsgTime !== String(data.timestamp)) {
+              sessionStorage.setItem('last_admin_msg_time', String(data.timestamp));
+              pushBotMessage({
+                text: `👤 **Store Admin:** ${data.text}`,
+                quickReplies: ['💬 Reply to Admin']
+              });
+              setIsChatOpen(true);
+            }
+          }
+        });
+      } catch (err) {
+        console.error('Error setting up admin message listener', err);
+      }
+    };
+
+    setupListener();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [pushBotMessage, setIsChatOpen]);
 
   // ── Firebase helpers ────────────────────────────────────────────────────────
   const checkExistingUser = async (phone: string): Promise<boolean> => {

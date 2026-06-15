@@ -1,0 +1,141 @@
+import re
+
+with open('src/lib/chatEngine.ts', 'r', encoding='utf-8') as f:
+    content = f.read()
+
+# Replace en translations
+content = re.sub(r'en: \{.*?(?=hi: \{)', '''en: {
+    greeting: "Welcome to ADIS Fashion. I am your virtual assistant. How may I assist you today?",
+    farewell: "Thank you for shopping with ADIS Fashion. Have a wonderful day.",
+    help_menu: "Please select an option below so I may assist you:",
+    ask_address: "Please provide your complete delivery address, including city and pincode.",
+    ask_payment: "Please select your preferred payment method: Cash on Delivery (COD) or Online Payment (Razorpay).",
+    order_confirmed: "Your order has been placed successfully. Your order ID is #{orderId}. You will receive a confirmation shortly.",
+    empty_cart: "Your cart is currently empty. Let me assist you in finding our products.",
+    unknown: "I apologize, but I did not understand your request. Please ask about our products, sizing, or type 'help' to view all options.",
+    ask_phone: "Please enter your 10-digit phone number to proceed:",
+    ask_name: "Please provide your full name to begin:",
+    ask_password_new: "Please create a password (minimum 6 characters) to complete your account registration and secure your order history:",
+    ask_password_existing: "Welcome back. Please enter your password to sign in:",
+    welcome_back: "Welcome back, {name}. How may I assist you today?",
+    registered: "Your account has been successfully created. Welcome to ADIS Fashion, {name}.",
+    cart_abandon: "You currently have {count} item(s) in your cart. Would you like assistance in completing your purchase?",
+    idle_nudge: "If you require further assistance with sizes, styles, or trending items, please let me know.",
+    contact_support: "**Contact Support:**\\n• Phone: +91 88884 05282\\n• Hours: Open Daily: 10:00 AM - 9:00 PM\\n• Address: Munot Chambers, Navipeth Road, Nalegaon, Ahmednagar - 414001, Maharashtra, India",
+  },
+  ''', content, flags=re.DOTALL)
+
+# Replace hi translations
+content = re.sub(r'hi: \{.*?(?=mr: \{)', '''hi: {
+    greeting: "ADIS Fashion में आपका स्वागत है। मैं आपका वर्चुअल असिस्टेंट हूँ। आज मैं आपकी कैसे सहायता कर सकता हूँ?",
+    farewell: "ADIS Fashion से खरीदारी के लिए धन्यवाद। आपका दिन शुभ हो।",
+    help_menu: "कृपया नीचे दिए गए विकल्पों में से चुनें:",
+    ask_address: "कृपया शहर और पिनकोड सहित अपना पूरा डिलीवरी पता प्रदान करें।",
+    ask_payment: "कृपया अपनी भुगतान विधि चुनें: कैश ऑन डिलीवरी (COD) या ऑनलाइन (Razorpay)।",
+    order_confirmed: "आपका ऑर्डर सफलतापूर्वक रखा गया है। आपका ऑर्डर ID #{orderId} है। आपको जल्द ही पुष्टि प्राप्त होगी।",
+    empty_cart: "आपका कार्ट वर्तमान में खाली है। उत्पादों को खोजने में मैं आपकी सहायता कर सकता हूँ।",
+    unknown: "क्षमा करें, मुझे समझ नहीं आया। कृपया हमारे उत्पादों, आकार के बारे में पूछें या सभी विकल्प देखने के लिए 'help' टाइप करें।",
+    ask_phone: "आगे बढ़ने के लिए कृपया अपना 10-अंकीय फ़ोन नंबर दर्ज करें:",
+    ask_name: "शुरू करने के लिए कृपया अपना पूरा नाम प्रदान करें:",
+    ask_password_new: "अपना खाता पंजीकरण पूरा करने और अपनी ऑर्डर हिस्ट्री सुरक्षित करने के लिए कृपया एक पासवर्ड (न्यूनतम 6 अक्षर) बनाएं:",
+    ask_password_existing: "वापसी पर स्वागत है। कृपया साइन इन करने के लिए अपना पासवर्ड दर्ज करें:",
+    welcome_back: "वापसी पर स्वागत है, {name}। आज मैं आपकी कैसे सहायता कर सकता हूँ?",
+    registered: "आपका खाता सफलतापूर्वक बना लिया गया है। ADIS Fashion में आपका स्वागत है, {name}।",
+    cart_abandon: "आपके कार्ट में वर्तमान में {count} आइटम हैं। क्या आप अपनी खरीदारी पूरी करने में सहायता चाहेंगे?",
+    idle_nudge: "यदि आपको आकार, शैली या ट्रेंडिंग आइटम के संबंध में और सहायता चाहिए, तो कृपया मुझे बताएं।",
+    contact_support: "**संपर्क करें:**\\n• फ़ोन: +91 88884 05282\\n• समय: सुबह 10:00 - रात 9:00 (प्रतिदिन)\\n• पता: मुनोत चैंबर्स, नवीपेठ रोड, नालेगांव, अहमदनगर - 414001, महाराष्ट्र",
+  },
+  ''', content, flags=re.DOTALL)
+
+# Replace mr translations
+content = re.sub(r'mr: \{.*?(?=\};)', '''mr: {
+    greeting: "ADIS Fashion मध्ये आपले स्वागत आहे. मी तुमचा व्हर्च्युअल असिस्टंट आहे. आज मी तुमची कशी मदत करू शकतो?",
+    farewell: "ADIS Fashion वर खरेदी केल्याबद्दल धन्यवाद. आपला दिवस चांगला जावो.",
+    help_menu: "कृपया खालील पर्यायांपैकी एक निवडा:",
+    ask_address: "कृपया शहर आणि पिनकोडसह आपला संपूर्ण डिलिव्हरी पत्ता द्या.",
+    ask_payment: "कृपया तुमची पेमेंट पद्धत निवडा: कॅश ऑन डिलिव्हरी (COD) किंवा ऑनलाइन (Razorpay).",
+    order_confirmed: "तुमची ऑर्डर यशस्वीरित्या नोंदवली गेली आहे. तुमचा ऑर्डर ID #{orderId} आहे. तुम्हाला लवकरच पुष्टी मिळेल.",
+    empty_cart: "तुमची कार्ट सध्या रिकामी आहे. आमची उत्पादने शोधण्यात मी तुमची मदत करू शकतो.",
+    unknown: "क्षमस्व, मला समजले नाही. कृपया आमची उत्पादने, आकार किंवा सर्व पर्याय पाहण्यासाठी 'help' टाइप करा.",
+    ask_phone: "पुढे जाण्यासाठी कृपया तुमचा 10 अंकी फोन नंबर प्रविष्ट करा:",
+    ask_name: "सुरू करण्यासाठी कृपया तुमचे पूर्ण नाव द्या:",
+    ask_password_new: "तुमची खाते नोंदणी पूर्ण करण्यासाठी आणि तुमची ऑर्डर हिस्ट्री सुरक्षित करण्यासाठी कृपया पासवर्ड (किमान 6 अक्षरे) तयार करा:",
+    ask_password_existing: "पुन्हा स्वागत आहे. कृपया साइन इन करण्यासाठी तुमचा पासवर्ड प्रविष्ट करा:",
+    welcome_back: "पुन्हा स्वागत आहे, {name}. आज मी तुमची कशी मदत करू शकतो?",
+    registered: "तुमचे खाते यशस्वीरित्या तयार केले गेले आहे. ADIS Fashion मध्ये आपले स्वागत आहे, {name}.",
+    cart_abandon: "तुमच्या कार्टमध्ये सध्या {count} आयटम आहेत. तुम्हाला तुमची खरेदी पूर्ण करण्यात मदत हवी आहे का?",
+    idle_nudge: "तुम्हाला आकार, शैली किंवा ट्रेंडिंग आयटमबाबत अधिक मदत हवी असल्यास, कृपया मला कळवा.",
+    contact_support: "**संपर्क करा:**\\n• फोन: +91 88884 05282\\n• वेळ: सकाळी 10:00 - रात्री 9:00 (दररोज)\\n• पत्ता: मुनोत चेंबर, नवी पेठ रोड, नालेगाव, अहमदनगर - 414001, महाराष्ट्र",
+  }''', content, flags=re.DOTALL)
+
+# Replace other hardcoded strings and emojis
+replacements = [
+    ("['🔥 Best Sellers', '🆕 New Arrivals', '🎯 Style Quiz', '📦 Track Order', '🛍️ My Cart']", "['Best Sellers', 'New Arrivals', 'Style Quiz', 'Track Order', 'My Cart']"),
+    ("'🔥 Best Sellers — trending items',", "'Best Sellers — Trending items',"),
+    ("'🆕 New Arrivals — latest drops',", "'New Arrivals — Latest collections',"),
+    ("'📐 Size Help — find your fit',", "'Size Help — Find your correct fit',"),
+    ("'💰 Offers — current deals',", "'Offers — Current promotions',"),
+    ("'📦 Track Order — shipment status',", "'Track Order — Shipment status',"),
+    ("'🎯 Style Quiz — personalised picks',", "'Style Quiz — Personalized recommendations',"),
+    ("'🛒 Checkout — place your order',", "'Checkout — Place your order',"),
+    ("'↩️ Returns — exchange & refund policy',", "'Returns — Exchange and refund policy',"),
+    ("['🔥 Best Sellers', '🎯 Style Quiz', '📦 Track Order']", "['Best Sellers', 'Style Quiz', 'Track Order']"),
+    ("text: '🔥 Here are our top selling items right now:',", "text: 'Here are our top-selling items at the moment:',"),
+    ("['🆕 New Arrivals', '🎯 Style Quiz', '📦 Track Order']", "['New Arrivals', 'Style Quiz', 'Track Order']"),
+    ("text: '✨ Fresh drops — just landed:',", "text: 'Our latest arrivals:',"),
+    ("['🔥 Best Sellers', '🎯 Style Quiz', '🛒 Checkout']", "['Best Sellers', 'Style Quiz', 'Checkout']"),
+    ("text: '🎭 Which fandom are you into?',", "text: 'Which collection are you interested in?',"),
+    ("text: `💥 ${label} collection — check these out:`", "text: `The ${label} collection. Please view the items below:`"),
+    ("['🛒 Checkout', '🔥 Best Sellers', '🎯 Style Quiz']", "['Checkout', 'Best Sellers', 'Style Quiz']"),
+    ("text: `💰 **${p.title}**\\n• Sale Price: ₹${p.prices.sale}\\n• MRP: ~~₹${p.prices.base}~~\\n• Member Price: ₹${p.prices.member} (join for free!)\\n• You save **${discount}%** off!`", "text: `**${p.title}**\\n• Sale Price: ₹${p.prices.sale}\\n• MRP: ~~₹${p.prices.base}~~\\n• Member Price: ₹${p.prices.member}\\n• Discount: ${discount}% off`"),
+    ("['🛒 Add to Cart', '📐 Size Help', '🔥 Best Sellers']", "['Add to Cart', 'Size Help', 'Best Sellers']"),
+    ("text: \"I'd love to share the price! Which product are you asking about? Type the name or browse:\"", "text: \"Please provide the name of the product you are inquiring about, or browse our categories:\""),
+    ("['🔥 Best Sellers', '🆕 New Arrivals', '🎭 Fandom Tees']", "['Best Sellers', 'New Arrivals', 'Fandom Collection']"),
+    ("text: `🧵 **${p.title}** fabric details:\\n• Material: ${p.details.material}\\n• GSM: ${p.details.gsm}\\n• Wash Care: ${p.details.wash_care}`", "text: `**${p.title}** Specifications:\\n• Material: ${p.details.material}\\n• GSM: ${p.details.gsm}\\n• Care Instructions: ${p.details.wash_care}`"),
+    ("['💰 Price', '📐 Size Help', '🛒 Checkout']", "['Price', 'Size Guide', 'Checkout']"),
+    ("text: \"All our tees use premium cotton (180–260 GSM). Which product's material details do you need?\"", "text: \"Our products are crafted using premium cotton (180–260 GSM). Which specific product's details would you like to review?\""),
+    ("['🔥 Best Sellers', '🆕 New Arrivals']", "['Best Sellers', 'New Arrivals']"),
+    ("text: '📐 Our size guide:',", "text: 'Please refer to our size guide below:',"),
+    ("['🔥 Best Sellers', '🆕 New Arrivals', '🎯 Style Quiz']", "['Best Sellers', 'New Arrivals', 'Style Quiz']"),
+    ("text: `🛍️ You have ${cart.length} item(s) in your cart:`", "text: `You have ${cart.length} item(s) in your cart:`"),
+    ("['🛒 Checkout', '🗑️ Clear Cart', '🔥 Keep Shopping']", "['Checkout', 'Clear Cart', 'Continue Shopping']"),
+    ("text: `🏷️ Current Offers:\\n• **WELCOME10** — 10% off your first order\\n• **MEMBER** — Join free membership for extra ₹200 off\\n• **ANIME20** — 20% off all Anime collection\\n• Free shipping on orders above ₹999`", "text: `Current Promotional Offers:\\n• **WELCOME10** — 10% discount on your first order\\n• **MEMBER** — Complimentary membership provides an additional ₹200 discount\\n• **ANIME20** — 20% discount on the Anime collection\\n• Complimentary shipping on orders exceeding ₹999`"),
+    ("['🛒 Checkout', '🔥 Best Sellers', '💳 Membership']", "['Checkout', 'Best Sellers', 'Membership']"),
+    ("text: `↩️ **Return & Exchange Policy:**\\n• 7-day easy returns from delivery\\n• Exchange for different size free of cost\\n• Full refund for damaged/wrong items\\n• No returns on sale items\\n\\nTo initiate a return, share your Order ID.`", "text: `**Return and Exchange Policy:**\\n• Returns are accepted within 7 days of delivery.\\n• Size exchanges are provided at no additional cost.\\n• Full refunds are issued for damaged or incorrect items.\\n• Items purchased during a sale are non-returnable.\\n\\nTo initiate a return, please provide your Order ID.`"),
+    ("['📦 Track Order', '🛒 Shop More', '📞 Contact Support']", "['Track Order', 'Continue Shopping', 'Contact Support']"),
+    ("text: `💎 **ADIS Membership — FREE to join!**\\n• Exclusive member prices (₹200–₹500 off)\\n• Early access to new drops\\n• Priority shipping\\n• Birthday surprise drops\\n\\nJoin now — it's completely free!`", "text: `**ADIS Membership Program:**\\n• Complimentary enrollment\\n• Exclusive member pricing (₹200–₹500 discount)\\n• Early access to new collections\\n• Priority shipping\\n• Special birthday promotions\\n\\nWould you like to enroll?`"),
+    ("['✅ Join Now', '🔥 Best Sellers']", "['Join Now', 'Best Sellers']"),
+    ("['🔥 Best Sellers', '📦 Track Order']", "['Best Sellers', 'Track Order']"),
+    ("text: '📦 Please share your Order ID (e.g. AD-12345) or AWB tracking number:',", "text: 'Please provide your Order ID (e.g., AD-12345) or AWB tracking number to check the status:',"),
+    ("['🔥 Shop Again', '🎯 Style Quiz']", "['Continue Shopping', 'Style Quiz']"),
+    ("['🔥 Best Sellers']", "['Best Sellers']"),
+    ("['💵 Cash on Delivery', '💳 Pay Online (Razorpay)']", "['Cash on Delivery', 'Pay Online (Razorpay)']"),
+    ("['🔥 Shop More', '📦 Track Order']", "['Continue Shopping', 'Track Order']"),
+    ("text: '👔 What fit do you prefer?',", "text: 'What type of fit do you prefer?',"),
+    ("text: '🎭 Any fandom you love?',", "text: 'Do you have a preferred collection or fandom?',"),
+    ("text: '💸 What\\'s your budget?',", "text: 'What is your preferred price range?',"),
+    ("text: `✨ Perfect! Based on your style, here are my top picks for you:`", "text: `Based on your preferences, here are our recommended items:`"),
+    ("['🔥 Show All Products', '🎯 Try Again']", "['View All Products', 'Retake Quiz']"),
+    ("['🛒 Checkout', '🔥 Best Sellers', '🎯 Try Again']", "['Checkout', 'Best Sellers', 'Retake Quiz']"),
+    ("text: '🎯 Let\\'s find your perfect style! What\\'s the occasion?',", "text: 'Let us assist you in finding the right style. What is the occasion?',"),
+    ("['👕 Casual / Everyday', '🏋️ Gym / Workout', '💼 Office / Formal', '🎉 Party', '🎁 Gift for Someone']", "['Casual', 'Gym/Workout', 'Office/Formal', 'Party', 'Gift']"),
+    ("text: '⚠️ Please enter a valid 10-digit phone number:',", "text: 'Please provide a valid 10-digit phone number:',"),
+    ("['🛒 Continue Checkout', '🔥 Best Sellers']", "['Continue Checkout', 'Best Sellers']"),
+    ("['🎯 Continue Style Quiz', '🔥 Best Sellers']", "['Continue Style Quiz', 'Best Sellers']"),
+    ("text: `😔 Sorry, we don't deliver to pincode **${pincode}** yet. But we're expanding fast!`", "text: `We apologize, but delivery to pincode **${pincode}** is currently unavailable.`"),
+    ("['Check Another Pincode', '🔥 Best Sellers']", "['Check Another Pincode', 'Best Sellers']"),
+    ("text: `✅ Great news! We deliver to **${pincode}**:`", "text: `Delivery to pincode **${pincode}** is available. Details below:`"),
+    ("['🛒 Checkout', '🔥 Shop Now']", "['Checkout', 'Continue Shopping']"),
+    ("text: `📦 Tracking AWB **${awb}**:`", "text: `Tracking information for AWB **${awb}**:`"),
+    ("['↩️ Return Policy', '🔥 Shop More']", "['Return Policy', 'Continue Shopping']"),
+    ("text: `Found it! Here's **${matched.title}**:`", "text: `We found the following item matching your query: **${matched.title}**:`"),
+    ("['💰 Price', '🧵 Material', '📐 Size Help', '🛒 Add to Cart']", "['Price', 'Material', 'Size Guide', 'Add to Cart']"),
+    ("text: `🎯 Based on \"${keyword}\", here are some picks:`", "text: `Based on your search for \"${keyword}\", please see the following recommendations:`"),
+    ("const DEFAULT_QUICK_REPLIES = ['🔥 Best Sellers', '🆕 New Arrivals', '🎯 Style Quiz', '📦 Track Order'];", "const DEFAULT_QUICK_REPLIES = ['Best Sellers', 'New Arrivals', 'Style Quiz', 'Track Order'];")
+]
+
+for old, new in replacements:
+    content = content.replace(old, new)
+
+with open('src/lib/chatEngine.ts', 'w', encoding='utf-8') as f:
+    f.write(content)
