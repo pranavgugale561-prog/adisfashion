@@ -173,34 +173,70 @@ export default function ChatWidget() {
     if (!isChatOpen) setUnreadCount(c => c + 1);
   }, [isChatOpen]);
 
-  // ── Listen for Admin Messages ───────────────────────────────────────────────
+  // ── Listen for Admin Messages & Broadcasts ───────────────────────────────────────────────
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const vid = localStorage.getItem('ADIS_visitorId');
     if (!vid) return;
 
-    let unsubscribe: (() => void) | undefined;
+    let unsubscribeIndividual: (() => void) | undefined;
+    let unsubscribeBroadcast: (() => void) | undefined;
+
+    const handleIncomingMessage = (data: any, storageKey: string) => {
+      if (!data) return;
+      const msgBody = data.body || data.text;
+      const msgTime = data.time || data.timestamp;
+      const msgTitle = data.title || 'Store Admin';
+
+      if (msgBody && msgTime) {
+        const lastMsgTime = sessionStorage.getItem(storageKey);
+        if (lastMsgTime !== String(msgTime)) {
+          sessionStorage.setItem(storageKey, String(msgTime));
+          
+          // Trigger native device notification
+          if ('Notification' in window && Notification.permission === 'granted') {
+            try {
+              new Notification(msgTitle, {
+                body: msgBody,
+                icon: '/favicon.ico',
+                badge: '/favicon.ico'
+              });
+            } catch (e) {
+              // Fallback for some mobile browsers that require Service Worker for notifications
+              if (navigator.serviceWorker) {
+                navigator.serviceWorker.ready.then(registration => {
+                  registration.showNotification(msgTitle, { body: msgBody, icon: '/favicon.ico' });
+                });
+              }
+            }
+          }
+
+          pushBotMessage({
+            text: `👤 **${msgTitle}:**\n${msgBody}`,
+            quickReplies: ['💬 Reply to Admin']
+          });
+          setIsChatOpen(true);
+        }
+      }
+    };
 
     const setupListener = async () => {
       try {
         const db = await getFirebaseDB();
         if (!db) return;
         
+        // Listen to individual messages
         const msgRef = ref(db, `user_messages/${vid}/latest`);
-        unsubscribe = onValue(msgRef, (snapshot) => {
-          const data = snapshot.val();
-          if (data && data.text && data.timestamp) {
-            const lastMsgTime = sessionStorage.getItem('last_admin_msg_time');
-            if (lastMsgTime !== String(data.timestamp)) {
-              sessionStorage.setItem('last_admin_msg_time', String(data.timestamp));
-              pushBotMessage({
-                text: `👤 **Store Admin:** ${data.text}`,
-                quickReplies: ['💬 Reply to Admin']
-              });
-              setIsChatOpen(true);
-            }
-          }
+        unsubscribeIndividual = onValue(msgRef, (snapshot) => {
+          handleIncomingMessage(snapshot.val(), 'last_admin_msg_time');
         });
+
+        // Listen to global broadcasts
+        const broadcastRef = ref(db, 'admin_notifications/latest');
+        unsubscribeBroadcast = onValue(broadcastRef, (snapshot) => {
+          handleIncomingMessage(snapshot.val(), 'last_admin_broadcast_time');
+        });
+
       } catch (err) {
         console.error('Error setting up admin message listener', err);
       }
@@ -209,7 +245,8 @@ export default function ChatWidget() {
     setupListener();
 
     return () => {
-      if (unsubscribe) unsubscribe();
+      if (unsubscribeIndividual) unsubscribeIndividual();
+      if (unsubscribeBroadcast) unsubscribeBroadcast();
     };
   }, [pushBotMessage, setIsChatOpen]);
 
@@ -448,7 +485,13 @@ export default function ChatWidget() {
         <motion.button
           aria-label="Open chat"
           className="w-13 h-13 sm:w-14 sm:h-14 w-[52px] h-[52px] bg-black text-[#FFE600] rounded-full flex items-center justify-center shadow-2xl relative"
-          onClick={() => setIsChatOpen(!isChatOpen)}
+          onClick={() => {
+            setIsChatOpen(!isChatOpen);
+            // Request push notification permission on user gesture
+            if (!isChatOpen && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+              Notification.requestPermission().catch(() => {});
+            }
+          }}
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.92 }}
         >
