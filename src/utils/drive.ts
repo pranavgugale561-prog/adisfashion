@@ -1,13 +1,21 @@
+const SESSION_CACHE_BUSTER = Date.now();
+
 export function convertGDriveUrl(url: string | undefined): string | undefined {
   if (!url) return url;
   
   // Already a data URI or Firebase Storage
   if (url.startsWith('data:')) return url;
   if (url.includes('firebasestorage.googleapis.com')) return url;
-        // Already a working thumbnail URL — upgrade resolution to s3000 if it has sz=
-        if (url.includes('drive.google.com/thumbnail')) {
-            return url.replace(/sz=[^&]+/, 'sz=s3000');
-        }
+  
+  // Already a working thumbnail URL — upgrade resolution to s3000 if it has sz=
+  if (url.includes('drive.google.com/thumbnail')) {
+      let updatedUrl = url.replace(/sz=[^&]+/, 'sz=s3000');
+      if (!updatedUrl.includes('cb=')) {
+          updatedUrl += `&cb=${SESSION_CACHE_BUSTER}`;
+      }
+      return updatedUrl;
+  }
+  
   if (url.includes('drive.usercontent.google.com/download')) return url;
 
   // Extract Google Drive file ID from various link formats
@@ -20,7 +28,7 @@ export function convertGDriveUrl(url: string | undefined): string | undefined {
   for (let reg of driveRegex) {
     const match = url.match(reg);
     if (match && match[1]) {
-      return `https://drive.google.com/thumbnail?id=${match[1]}&sz=s3000`;
+      return `https://drive.google.com/thumbnail?id=${match[1]}&sz=s3000&cb=${SESSION_CACHE_BUSTER}`;
     }
   }
   
