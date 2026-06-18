@@ -92,7 +92,7 @@ export default function BackgroundMusic() {
           onClick={handleTap}
           aria-label={muted ? 'Unmute music' : 'Mute music'}
           title={muted ? 'Tap to unmute' : 'Tap to mute'}
-          className="fixed bottom-5 left-4 sm:bottom-6 sm:left-6 z-40
+          className="fixed bottom-28 left-4 sm:bottom-6 sm:left-6 z-40
                      flex items-end gap-[3px] h-8 px-2.5 py-1.5
                      bg-black/80 backdrop-blur-sm rounded-xl
                      border border-white/10 shadow-lg
