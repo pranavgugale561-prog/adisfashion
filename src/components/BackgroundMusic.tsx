@@ -27,7 +27,7 @@ export default function BackgroundMusic() {
         setPlaying(true);
         setShowEq(true);
         
-        events.forEach(e => window.removeEventListener(e, start));
+
 
         let v = 0;
         const fade = setInterval(() => {
