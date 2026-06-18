@@ -74,6 +74,10 @@ export default function PageLoader() {
       console.error('Failed to capture metadata', e);
     }
 
+    if (typeof window !== 'undefined' && (window as any).startBackgroundMusic) {
+      (window as any).startBackgroundMusic();
+    }
+
     setPhase('video');
 
     // 6-second progress bar

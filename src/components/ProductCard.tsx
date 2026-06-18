@@ -34,7 +34,8 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.1 }}
       transition={{ delay: (index % 10) * 0.05, duration: 0.4 }}
       className="group"
     >

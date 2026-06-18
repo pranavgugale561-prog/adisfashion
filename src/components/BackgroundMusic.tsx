@@ -40,16 +40,14 @@ export default function BackgroundMusic() {
       }
     };
 
-    const events: (keyof WindowEventMap)[] = ['click', 'touchstart', 'keydown'];
-    events.forEach(e => window.addEventListener(e, start, { passive: true }));
-    
-    // Attempt to autoplay immediately on load!
-    // Note: Modern browsers (Chrome, Safari, iOS) strictly block unmuted autoplay 
-    // unless the user has interacted with the site previously.
-    start();
+    // Expose globally so PageLoader can trigger it directly within the user gesture context
+    (window as any).startBackgroundMusic = start;
+
+    // Do NOT attempt to autoplay immediately on load to ensure user explicitly starts
+    // the experience through the PageLoader's Tap to Start button.
 
     return () => {
-      events.forEach(e => window.removeEventListener(e, start));
+      delete (window as any).startBackgroundMusic;
       audio.pause();
       audio.src = '';
     };

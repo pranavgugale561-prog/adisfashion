@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, ShoppingBag, Heart, X,
-  User, ShieldCheck, Home, Shirt, Flame, Info, Crown, Camera, Store
+  User, ShieldCheck, Home, Shirt, Flame, Info, Crown, Camera, Store, Watch
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { cn } from '@/lib/utils';
@@ -332,6 +332,7 @@ export default function Navbar() {
                 {link.label === 'Men' && <Shirt className="w-5 h-5" />}
                 {link.label === 'Daily Wear' && <User className="w-5 h-5" />}
                 {link.label === 'Sneakers' && <Flame className="w-5 h-5" />}
+                {link.label === 'Premium Accessories' && <Watch className="w-5 h-5" />}
                 {link.label === 'Feeds' && <Camera className="w-5 h-5" />}
                 {link.label === 'Members' && <Crown className={cn('w-5 h-5', active ? 'text-[#FFE600]' : '')} />}
                 {link.label === 'About' && <Info className="w-5 h-5" />}
